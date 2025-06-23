@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOAA Model Viewer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+      color: #333;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    body.dark {
+      background-color: #121212;
+      color: #fff;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      padding: 2rem;
+    }
+    label, select, input {
+      margin: 0.5rem;
+    }
+    img {
+      margin-top: 2rem;
+      width: 100%;
+      max-width: 800px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      margin: 1rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background-color: #007BFF;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+    }
+    .top-buttons {
+      margin-bottom: 1rem;
+    }
+    .clock {
+      font-size: 1rem;
+      margin-top: -1rem;
+      margin-bottom: 1rem;
+    }
+    .slider-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>NOAA Model Viewer</h1>
+
+    <div class="clock" id="utcClock">UTC Time: --:--:--</div>
+
+    <div class="top-buttons">
+      <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+      <button onclick="goHome()">Home</button>
+    </div>
+
+    <div class="controls">
+      <label for="model">Model:</label>
+      <select id="model">
+        <option value="hrrr">HRRR</option>
+        <option value="hrw-fv3">HRW-FV3</option>
+        <option value="hrw-arw">HRW-ARW</option>
+        <option value="hrw-arw2">HRW-ARW2</option>
+      </select>
+
+      <label for="modelhour">Model Hour:</label>
+      <select id="modelhour"></select>
+
+      <label for="forecastproduct">Product:</label>
+      <select id="forecastproduct">
+        <option value="_sim_radar_1km">Simulated Radar (1km)</option>
+        <option value="_sfc_cape_cin">CAPE/CIN</option>
+        <option value="_helicity_1km">1km Helicity</option>
+        <option value="_helicity_3km">3km Helicity</option>
+      </select>
+    </div>
+
+    <br>
+
+    <div class="slider-container">
+      <label for="forecasthour">Forecast Hour:</label>
+      <input type="range" id="forecasthour" min="0" max="0" step="1" value="0">
+      <span id="forecastLabel"></span>
+      <button onclick="togglePlay()" id="playButton">Play</button>
+    </div>
+
+    <img id="forecastImage" src="" alt="Forecast Image">
+  </div>
+
+  <script>
+    const modelSelect = document.getElementById('model');
+    const modelHourSelect = document.getElementById('modelhour');
+    const forecastHourSlider = document.getElementById('forecasthour');
+    const forecastLabel = document.getElementById('forecastLabel');
+    const forecastProductSelect = document.getElementById('forecastproduct');
+    const playButton = document.getElementById('playButton');
+
+    let forecastHourValues = [];
+    let playInterval = null;
+
+    modelSelect.addEventListener('change', updateModelHours);
+    modelHourSelect.addEventListener('change', updateForecastHours);
+    forecastHourSlider.addEventListener('input', () => {
+      forecastLabel.textContent = forecastHourValues[forecastHourSlider.value];
+      updateImage();
+    });
+    forecastProductSelect.addEventListener('change', updateForecastHours);
+
+    function pad(num, size) {
+      let s = "00000" + num;
+      return s.substr(s.length - size);
+    }
+
+    function updateModelHours() {
+      const model = modelSelect.value;
+      modelHourSelect.innerHTML = '';
+      if (model === 'hrrr') {
+        for (let i = 0; i <= 23; i++) {
+          modelHourSelect.innerHTML += `<option value="${pad(i, 2)}">${pad(i, 2)}</option>`;
+        }
+      } else {
+        modelHourSelect.innerHTML += '<option value="00">00</option>';
+        modelHourSelect.innerHTML += '<option value="12">12</option>';
+      }
+      updateForecastHours();
+    }
+
+    function updateForecastHours() {
+      const model = modelSelect.value;
+      const modelHour = modelHourSelect.value;
+      const product = forecastProductSelect.value;
+      forecastHourValues = [];
+
+      if (model === 'hrrr') {
+        const fullRun = ["00", "06", "12", "18"].includes(modelHour);
+        if (product === '_sim_radar_1km') {
+          for (let hour = 0; hour <= 18; hour++) {
+            for (let min of [0, 15, 30, 45]) {
+              forecastHourValues.push(`0${pad(hour, 2)}${pad(min, 2)}`);
+            }
+          }
+          if (fullRun) {
+            for (let hour = 19; hour <= 48; hour++) {
+              forecastHourValues.push(`0${pad(hour, 2)}00`);
+            }
+          }
+        } else {
+          for (let hour = 1; hour <= 18; hour++) {
+            forecastHourValues.push(`0${pad(hour, 2)}00`);
+          }
+          if (fullRun) {
+            for (let hour = 19; hour <= 48; hour++) {
+              forecastHourValues.push(`0${pad(hour, 2)}00`);
+            }
+          }
+        }
+      } else {
+        for (let i = 1; i <= 48; i++) {
+          forecastHourValues.push(pad(i, 3));
+        }
+      }
+
+      forecastHourSlider.max = forecastHourValues.length - 1;
+      forecastHourSlider.value = 0;
+      forecastLabel.textContent = forecastHourValues[0];
+      updateImage();
+    }
+
+    function updateImage() {
+      const model = modelSelect.value;
+      const modelhour = modelHourSelect.value;
+      const forecasthour = forecastHourValues[forecastHourSlider.value];
+      const forecastproduct = forecastProductSelect.value;
+
+      const url = `http://mag.ncep.noaa.gov/data/${model}/${modelhour}/${model}_us-sc_${forecasthour}${forecastproduct}.gif`;
+      document.getElementById('forecastImage').src = url;
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark');
+    }
+
+    function goHome() {
+      window.location.href = '/';
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const utc = now.toUTCString().split(' ')[4];
+      document.getElementById('utcClock').textContent = `UTC Time: ${utc}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function togglePlay() {
+      if (playInterval) {
+        clearInterval(playInterval);
+        playInterval = null;
+        playButton.textContent = 'Play';
+      } else {
+        let index = parseInt(forecastHourSlider.value);
+        playInterval = setInterval(() => {
+          forecastHourSlider.value = index;
+          forecastLabel.textContent = forecastHourValues[index];
+          updateImage();
+          index++;
+          if (index >= forecastHourValues.length) {
+            clearInterval(playInterval);
+            playInterval = null;
+            playButton.textContent = 'Play';
+          }
+        }, 500);
+        playButton.textContent = 'Pause';
+      }
+    }
+
+    // Initialize on page load
+    updateModelHours();
+  </script>
+</body>
+</html>

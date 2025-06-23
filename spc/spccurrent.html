@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Current Day 1 Convective</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://cdn.glitch.global/10289291-dda7-497d-a43c-f017e0457b15/image_2023-12-16_172444899.png?v=1739490392300"
+    />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 20px;
+        background-color: #ffffff;
+        color: #000000;
+        transition: background-color 0.3s, color 0.3s;
+      }
+      body.dark {
+        background-color: #1c1c1c;
+        color: #ffffff;
+      }
+      .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        justify-items: center;
+        align-items: center;
+      }
+      .grid-container img {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      button {
+        margin: 10px;
+        padding: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Current SPC Day 1 Severe Weather Outlook</h1>
+    <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+    <a href="https://wg-warn-dash.glitch.me/">
+      <button>Home</button>
+    </a>
+    <div class="grid-container">
+      <img
+        id="act"
+        src="https://www.spc.noaa.gov/products/activity_loop.gif"
+        alt="Current Activity"
+      />
+      <img
+        id="ww"
+        src="https://www.spc.noaa.gov/products/watch/validww.png"
+        alt="Current Watches"
+      />
+      <img
+        id="md"
+        src="https://www.spc.noaa.gov/products/md/validmd.png"
+        alt="Current Mesoscale"
+      />
+      <img
+        id="rep"
+        src="https://www.spc.noaa.gov/climo/reports/today.gif"
+        alt="Current Reports"
+      />
+    </div>
+    <script>
+      function refreshGridImages() {
+        const timestamp = new Date().getTime();
+        document.getElementById(
+          "act"
+        ).src = `https://www.spc.noaa.gov/products/activity_loop.gif?${timestamp}`;
+        document.getElementById(
+          "ww"
+        ).src = `https://www.spc.noaa.gov/products/watch/validww.png?${timestamp}`;
+        document.getElementById(
+          "md"
+        ).src = `https://www.spc.noaa.gov/products/md/validmd.png?${timestamp}`;
+        document.getElementById(
+          "rep"
+        ).src = `https://www.spc.noaa.gov/climo/reports/today.gif?${timestamp}`;
+      }
+
+      function toggleDarkMode() {
+        document.body.classList.toggle("dark");
+      }
+
+      setInterval(refreshGridImages, 30000);
+    </script>
+  </body>
+</html>

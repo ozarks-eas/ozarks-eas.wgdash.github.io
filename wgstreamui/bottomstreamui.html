@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1609, initial-scale=1.0" />
+  <title>Bottom Weather Alert Banner</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f9fafb;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-weight: bold;
+    }
+
+    .alert-container {
+      width: 1609px;
+      height: 25px;
+      position: relative;
+      background-color: #000;
+      color: white;
+      overflow: hidden;
+      opacity: 1;
+      transition: opacity 1s ease-in-out;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .alert-hidden {
+      opacity: 0;
+    }
+
+    .event-box {
+      position: absolute;
+      left: -220px;
+      top: 0;
+      height: 100%;
+      min-width: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0 15px;
+      font-weight: bold;
+      z-index: 2;
+      border-right: 1px solid rgba(255, 255, 255, 0.3);
+      pointer-events: none;
+      transition: left 0.5s ease-in-out;
+    }
+
+    .event-box.slide-in {
+      left: 0;
+    }
+
+    .scroll-container {
+      white-space: nowrap;
+      display: inline-block;
+      padding-left: 220px;
+      animation: scroll-left 20s linear infinite;
+      z-index: 1;
+      font-weight: bold;
+    }
+
+    @keyframes scroll-left {
+      0% {
+        transform: translateX(100%);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="alert-container" id="alertBanner">
+    <div class="event-box" id="alertEvent">Loading...</div>
+    <div class="scroll-container" id="alertMessage">Fetching latest alerts...</div>
+  </div>
+
+  <script>
+    const relevantEvents = [
+      "Tornado Warning",
+      "Severe Thunderstorm Warning",
+      "Flash Flood Warning",
+      "Tornado Watch",
+      "Severe Thunderstorm Watch",
+    ];
+
+    const stateMap = {
+      AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas", CA: "California",
+      CO: "Colorado", CT: "Connecticut", DE: "Delaware", FL: "Florida", GA: "Georgia",
+      HI: "Hawaii", ID: "Idaho", IL: "Illinois", IN: "Indiana", IA: "Iowa",
+      KS: "Kansas", KY: "Kentucky", LA: "Louisiana", ME: "Maine", MD: "Maryland",
+      MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi",
+      MO: "Missouri", MT: "Montana", NE: "Nebraska", NV: "Nevada", NH: "New Hampshire",
+      NJ: "New Jersey", NM: "New Mexico", NY: "New York", NC: "North Carolina",
+      ND: "North Dakota", OH: "Ohio", OK: "Oklahoma", OR: "Oregon", PA: "Pennsylvania",
+      RI: "Rhode Island", SC: "South Carolina", SD: "South Dakota", TN: "Tennessee",
+      TX: "Texas", UT: "Utah", VT: "Vermont", VA: "Virginia", WA: "Washington",
+      WV: "West Virginia", WI: "Wisconsin", WY: "Wyoming"
+    };
+
+    const eventColors = {
+      "Tornado Warning": { bg: "#FF0000", text: "white" },
+      "Flash Flood Warning": { bg: "#8B0000", text: "white" },
+      "Severe Thunderstorm Warning": { bg: "#FFA500", text: "white" },
+      "Tornado Watch": { bg: "#FFFF00", text: "black" },
+      "Severe Thunderstorm Watch": { bg: "#DB7093", text: "black" },
+    };
+
+    let lastMessage = '';
+    let scrollCount = 0;
+    let fadeTimeout = null;
+
+    function formatTime(expires) {
+		const date = new Date(expires);
+		const month = date.toLocaleString('en-US', { month: 'short' });
+		const day = String(date.getDate()).padStart(2, '0');
+		const year = date.getFullYear();
+		let hours = date.getHours();
+		const minutes = String(date.getMinutes()).padStart(2, '0');
+		const ampm = hours >= 12 ? 'PM' : 'AM';
+		hours = hours % 12 || 12;
+		const hourStr = String(hours).padStart(2, '0');
+		return `${month} ${day}, ${year} ${hourStr}:${minutes} ${ampm}`;
+	}
+
+    function fadeOutBanner() {
+      document.getElementById("alertBanner").classList.add("alert-hidden");
+      document.getElementById("alertEvent").classList.remove("slide-in");
+    }
+
+    function fadeInBanner() {
+      document.getElementById("alertBanner").classList.remove("alert-hidden");
+      document.getElementById("alertEvent").classList.add("slide-in");
+    }
+
+    function resetScrollTimer() {
+      scrollCount = 0;
+      clearInterval(fadeTimeout);
+      fadeTimeout = setInterval(() => {
+        scrollCount++;
+        if (scrollCount >= 4) {
+          fadeOutBanner();
+          clearInterval(fadeTimeout);
+        }
+      }, 20000); // match scroll duration
+    }
+
+    async function fetchAlert() {
+      try {
+        const res = await fetch("https://api.weather.gov/alerts/active");
+        const data = await res.json();
+        const alerts = data.features
+          .map((feature) => feature.properties)
+          .filter((alert) => relevantEvents.includes(alert.event));
+
+        if (alerts.length > 0) {
+          const { event, senderName, areaDesc, expires } = alerts[0];
+          let sender = senderName.replace("NWS ", "");
+          const stateAbbr = sender.split(" ").pop();
+          const stateFull = stateMap[stateAbbr] || stateAbbr;
+          const location = sender.replace(stateAbbr, stateFull);
+          const message = `The National Weather Service in ${location} has issued a ${event} for: ${areaDesc} until ${formatTime(expires)}`;
+
+          if (message !== lastMessage) {
+            lastMessage = message;
+            const eventBox = document.getElementById("alertEvent");
+            const colors = eventColors[event] || { bg: "#444", text: "white" };
+
+            eventBox.textContent = event;
+            eventBox.style.backgroundColor = colors.bg;
+            eventBox.style.color = colors.text;
+
+            document.getElementById("alertMessage").textContent = message;
+
+            fadeInBanner();
+            resetScrollTimer();
+          }
+        } else {
+          lastMessage = '';
+          fadeOutBanner();
+        }
+      } catch (err) {
+        console.error("Failed to fetch alerts:", err);
+        const errorBox = document.getElementById("alertEvent");
+        errorBox.textContent = "Error";
+        errorBox.style.backgroundColor = "#666";
+        errorBox.style.color = "white";
+        document.getElementById("alertMessage").textContent = "Could not fetch weather alerts.";
+      }
+    }
+
+    fetchAlert();
+    resetScrollTimer();
+    setInterval(fetchAlert, 60000); // every 5 minutes
+  </script>
+
+</body>
+</html>

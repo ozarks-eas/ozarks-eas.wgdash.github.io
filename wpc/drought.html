@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>US Drought Monitor</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://cdn.glitch.global/10289291-dda7-497d-a43c-f017e0457b15/image_2023-12-16_172444899.png?v=1739490392300"
+    />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 20px;
+        background-color: #ffffff;
+        color: #000000;
+        transition: background-color 0.3s, color 0.3s;
+      }
+      body.dark {
+        background-color: #1c1c1c;
+        color: #ffffff;
+      }
+      img {
+        max-width: 90%;
+        max-height: 80vh;
+        height: auto;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-top: 20px;
+      }
+      input,
+      button {
+        margin: 10px;
+        padding: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>US Drought Monitor</h1>
+    <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+    <a href="https://wg-warn-dash.glitch.me/">
+      <button>Home</button>
+    </a>
+    <br />
+    <input
+      type="text"
+      id="stateInput"
+      placeholder="Enter state abbreviation (e.g., CA)"
+      maxlength="2"
+    />
+    <button onclick="updateMap()">Update Map</button>
+    <div>
+      <img
+        id="droughtMap"
+        src="https://droughtmonitor.unl.edu/data/png/current/current_conus_trd.png"
+        alt="Drought Monitor Map"
+      />
+    </div>
+
+    <script>
+      function toggleDarkMode() {
+        document.body.classList.toggle("dark");
+      }
+
+      function updateMap() {
+        const state = document
+          .getElementById("stateInput")
+          .value.trim()
+          .toLowerCase();
+        const baseUrl = "https://droughtmonitor.unl.edu/data/png/current/";
+        const imageElement = document.getElementById("droughtMap");
+        const timestamp = new Date().getTime();
+
+        if (state === "") {
+          imageElement.src = `${baseUrl}current_conus_trd.png?${timestamp}`;
+        } else {
+          imageElement.src = `${baseUrl}current_${state}_trd.png?${timestamp}`;
+        }
+      }
+    </script>
+  </body>
+</html>

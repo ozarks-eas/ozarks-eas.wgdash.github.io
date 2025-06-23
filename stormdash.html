@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Storm Intensity Viewer</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://cdn.glitch.global/10289291-dda7-497d-a43c-f017e0457b15/image_2023-12-16_172444899.png?v=1739490392300"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+      :root {
+        --bg-color: #2c2c2c;
+        --text-color: #ffffff;
+        --card-color: #3a3a3a;
+        --title-color: #ffffff;
+        --button-bg: #ffffff;
+        --button-text: #000000;
+      }
+      body.light-mode {
+        --bg-color: #ffffff;
+        --text-color: #000000;
+        --card-color: #f1f1f1;
+        --title-color: #000000;
+        --button-bg: #000000;
+        --button-text: #ffffff;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        padding: 20px;
+        background: var(--bg-color);
+        color: var(--text-color);
+        transition: all 0.3s ease;
+      }
+      h1 {
+        text-align: center;
+        color: var(--title-color);
+      }
+      .button-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 10px auto;
+      }
+      .button-home,
+      #toggleThemeBtn,
+      #toggleColumnsBtn {
+        padding: 10px;
+        background: var(--button-bg);
+        color: var(--button-text);
+        text-align: center;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        border: none;
+      }
+      .sort-container {
+        text-align: center;
+        margin-bottom: 15px;
+      }
+      .storm-grid.one {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      .storm-grid.two {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+      .storm-grid.three {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+      }
+      .storm {
+        background: var(--card-color);
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      }
+      .highlight-none {
+        border-left: 5px solid transparent;
+      }
+      .highlight-green {
+        border-left: 5px solid green;
+      }
+      .highlight-yellow {
+        border-left: 5px solid yellow;
+      }
+      .highlight-orange {
+        border-left: 5px solid orange;
+      }
+      .highlight-red {
+        border-left: 5px solid red;
+      }
+      .highlight-pink {
+        border-left: 5px solid hotpink;
+      }
+      .highlight-purple {
+        border-left: 5px solid purple;
+      }
+      .map-container {
+        height: 300px;
+        margin-top: 10px;
+        border-radius: 8px;
+        overflow: hidden;
+        display: none;
+      }
+      .update-timestamp {
+        text-align: center;
+        font-size: 0.9em;
+        margin-top: 10px;
+        color: var(--text-color);
+      }
+    </style>
+  </head>
+  <body>
+    <h1 id="mainTitle">Storm Intensity Viewer</h1>
+    <div class="button-container">
+      <a href="https://wg-warn-dash.glitch.me/" class="button-home">Home</a>
+      <button id="toggleThemeBtn">Toggle Theme</button>
+      <button id="toggleColumnsBtn">Toggle Columns</button>
+    </div>
+    <div class="sort-container">
+      <label for="sortSelect">Sort by:</label>
+      <select id="sortSelect">
+        <option value="intensity">Storm Intensity</option>
+        <option value="tornado">Tornado Composite Index</option>
+        <option value="hail">Max Hail Size</option>
+        <option value="dbz">Max dBZ</option>
+      </select>
+    </div>
+    <div id="stormContainer" class="storm-grid one">Loading storm data...</div>
+    <div id="updateTime" class="update-timestamp"></div>
+    <script>
+      const EXCLUDE_NEXRADS = [
+        "TUL",
+        "MCI",
+        "ICH",
+        "OKC",
+        "PHX",
+        "FLL",
+        "MIA",
+        "MCO",
+        "TPA",
+        "PBI",
+        "ATL",
+        "MDW",
+        "ORD",
+        "SDF",
+        "MSY",
+        "BOS",
+        "ADW",
+        "BWI",
+        "DCA",
+        "DTW",
+        "MSP",
+        "STL",
+        "CLT",
+        "RDU",
+        "EWR",
+        "LAS",
+        "JFK",
+        "CVG",
+        "LVE",
+        "CMH",
+        "DAY",
+        "PHL",
+        "PIT",
+        "SJU",
+        "MEM",
+        "BNA",
+        "DAL",
+        "DFW",
+        "HOU",
+        "IAH",
+        "SLC",
+        "IAD",
+        "MKE",
+      ];
+      const ALWAYS_INCLUDE_NEXRADS = ["INX", "SRX", "SGF", "MLB", "TBW"];
+
+      // Toggle dark/light mode
+      document
+        .getElementById("toggleThemeBtn")
+        .addEventListener("click", () => {
+          document.body.classList.toggle("light-mode");
+          document.getElementById("mainTitle").style.color =
+            document.body.classList.contains("light-mode") ? "#000" : "#fff";
+        });
+
+      // Toggle between one, two, and three column layouts
+      let currentColumnMode = 1;
+      document
+        .getElementById("toggleColumnsBtn")
+        .addEventListener("click", () => {
+          currentColumnMode = (currentColumnMode % 3) + 1;
+          const container = document.getElementById("stormContainer");
+          container.className = `storm-grid ${
+            ["one", "two", "three"][currentColumnMode - 1]
+          }`;
+        });
+
+      // Convert wind direction in degrees to cardinal direction, reversed
+      const getCardinalDirection = (deg) => {
+        const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+        return dirs[Math.round(((deg + 180) % 360) / 45) % 8];
+      };
+
+      // Convert knots to miles per hour
+      const knotsToMph = (knots) => (Number(knots) * 1.15078 || 0).toFixed(1);
+
+      // Calculate storm intensity
+      const calculateIntensity = (p) => {
+        const tvs =
+          p.tvs === "TVS" ? 10 : p.tvs === "NONE" ? 0 : Number(p.tvs) || 0;
+        const meso = Number(p.meso) || 0;
+        const posh = Number(p.posh) || 0;
+        const poh = Number(p.poh) || 0;
+        const size = Number(p.max_size) || 0;
+        const vil = Number(p.vil) || 0;
+        const dbz = Number(p.max_dbz) || 0;
+        const top = Number(p.top) || 0;
+
+        const base = (posh * 24 + poh + size * 5 + dbz) / 6;
+        const vil_factor =
+          vil < 15 ? 0.5 : vil <= 29 ? 0.75 : vil <= 49 ? 1.25 : 1.75;
+        const et_factor =
+          top >= 51.9
+            ? 2
+            : top >= 43.3
+            ? 1.5
+            : top >= 34.7
+            ? 1
+            : top >= 26.1
+            ? 0.5
+            : top >= 17.5
+            ? 0.25
+            : top >= 8.9
+            ? 0.15
+            : 0.1;
+
+        const enhanced = base * vil_factor * et_factor;
+        const tornado_factor = (tvs + meso * 1.35) * 5;
+        const total = enhanced + tornado_factor;
+
+        const longevity = {
+          0.15: [35, 10, 5],
+          0.25: [50, 35, 10],
+          0.5: [75, 50, 35],
+          1: [95, 75, 50],
+          1.5: [100, 95, 75],
+          2: [100, 100, 95],
+        }[et_factor] || [10, 5, 1];
+
+        return {
+          total_intensity: Number(total.toFixed(2)),
+          tornado_index: Number(tornado_factor.toFixed(2)),
+          longevity15: longevity[0],
+          longevity30: longevity[1],
+          longevity60: longevity[2],
+        };
+      };
+
+      // Determine highlight color based on intensity
+      const getHighlight = (v) =>
+        v < 35
+          ? "highlight-none"
+          : v < 50
+          ? "highlight-green"
+          : v < 70
+          ? "highlight-yellow"
+          : v < 90
+          ? "highlight-orange"
+          : v < 110
+          ? "highlight-red"
+          : v < 350
+          ? "highlight-pink"
+          : "highlight-purple";
+
+      // Create map for storm location
+      const createMap = (id, coords) => {
+        if (L.DomUtil.get(id)._leaflet_id) {
+          L.DomUtil.get(id)._leaflet_id = null;
+        }
+        const map = L.map(id).setView([coords[1], coords[0]], 8);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(
+          map
+        );
+        L.tileLayer
+          .wms("https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q.cgi", {
+            layers: `nexrad-n0q-900913`,
+            format: "image/png",
+            transparent: true,
+          })
+          .addTo(map);
+        L.marker([coords[1], coords[0]]).addTo(map);
+      };
+
+      // Render storm cards to DOM
+      const renderStorms = () => {
+        const sort = document.getElementById("sortSelect").value;
+        const c = document.getElementById("stormContainer");
+        c.innerHTML = "";
+
+        const sorted = [...stormData].sort((a, b) => {
+          if (sort === "tornado") return b.tornado_index - a.tornado_index;
+          if (sort === "hail")
+            return (b.props.max_size || 0) - (a.props.max_size || 0);
+          if (sort === "dbz")
+            return (b.props.max_dbz || 0) - (a.props.max_dbz || 0);
+          return b.total_intensity - a.total_intensity;
+        });
+
+        sorted.forEach((s, i) => {
+          const p = s.props;
+          const div = document.createElement("div");
+          div.className = `storm ${getHighlight(s.total_intensity)}`;
+          const mid = `map-${i}`;
+          const tid = `toggle-${mid}`;
+
+          div.innerHTML = `
+            <strong>Storm ID:</strong> ${p.storm_id || "N/A"}<br>
+            <strong>NEXRAD:</strong> K${p.nexrad || "N/A"}<br>
+            <strong>Storm Intensity Index:</strong> ${s.total_intensity}<br>
+            <strong>Tornado Composite Index:</strong> ${s.tornado_index}<br>
+            <strong>Direction:</strong> ${
+              p.drct ? getCardinalDirection(p.drct) : "N/A"
+            }<br>
+            <strong>Speed:</strong> ${
+              p.sknt ? knotsToMph(p.sknt) : "N/A"
+            } mph<br>
+            <strong>Likelihood of Severe Hail:</strong> ${p.posh || 0}%<br>
+            <strong>Likelihood of Hail:</strong> ${p.poh || 0}%<br>
+            <strong>Max Hail Size:</strong> ${p.max_size || 0} in<br>
+            <strong>Max dBZ:</strong> ${p.max_dbz || 0} dBZ<br>
+            <strong>Vertically Integrated Liquid:</strong> ${
+              p.vil || 0
+            } kg/m<sup>2</sup><br>
+            <strong>Tornado Vortex Signature Strength:</strong> ${
+              p.tvs || 0
+            }<br>
+            <strong>Mesocyclone Strength:</strong> ${p.meso || 0}<br>
+            <strong>Echo Top Height:</strong> ${p.top || 0} kft<br>
+            <strong>15 Minute Maintenance:</strong> ${s.longevity15}%<br>
+            <strong>30 Minute Maintenance:</strong> ${s.longevity30}%<br>
+            <strong>60 Minute Maintenance:</strong> ${s.longevity60}%<br>
+            <button id="${tid}">Show Map</button>
+            <div id="${mid}" class="map-container"></div>
+          `;
+
+          c.appendChild(div);
+          document.getElementById(tid).addEventListener("click", () => {
+            const mapDiv = document.getElementById(mid);
+            mapDiv.style.display =
+              mapDiv.style.display === "block" ? "none" : "block";
+            if (mapDiv.style.display === "block") createMap(mid, s.coords);
+          });
+        });
+      };
+
+      // Update last refresh time
+      const updateTime = () => {
+        const now = new Date();
+        document.getElementById(
+          "updateTime"
+        ).textContent = `Last updated at ${now.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}`;
+      };
+
+      // Load storm data and apply transformations
+      let stormData = [];
+      const loadStormData = () => {
+        fetch("https://mesonet.agron.iastate.edu/geojson/nexrad_attr.py")
+          .then((res) => res.json())
+          .then((data) => {
+            stormData = data.features
+              .filter((f) => {
+                const nexrad = (f.properties.nexrad || "").toUpperCase();
+                return (
+                  ALWAYS_INCLUDE_NEXRADS.includes(nexrad) ||
+                  !EXCLUDE_NEXRADS.includes(nexrad)
+                );
+              })
+              .map((f) => {
+                const props = f.properties;
+                const coords = f.geometry.coordinates;
+                const result = calculateIntensity(props);
+                return { props, coords, ...result };
+              })
+              .filter(
+                (s) => s.total_intensity >= 25 && (s.props.range || 0) < 130
+              );
+
+            renderStorms();
+            updateTime();
+          })
+          .catch((e) => {
+            document.getElementById("stormContainer").innerText =
+              "Failed to load storm data.";
+            console.error(e);
+          });
+      };
+
+      loadStormData();
+      setInterval(loadStormData, 120000);
+    </script>
+  </body>
+</html>

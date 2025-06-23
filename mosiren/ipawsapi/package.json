@@ -1,0 +1,10 @@
+{
+  "name": "ipaws-cap-parser",
+  "version": "1.0.0",
+  "description": "IPAWS CAP Parser",
+  "main": "ipaws_cap_parser.py",
+  "scripts": {
+    "start": "python3 ipaws_cap_parser.py"
+  },
+  "dependencies": {}
+}

@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather Warnings</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://cdn.glitch.global/10289291-dda7-497d-a43c-f017e0457b15/image_2023-12-16_172444899.png?v=1739490392300"
+    />
+    <style>
+      body {
+        --menu-background-color: #f0f0f0;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 20px;
+        padding-top: 80px;
+        background-color: #ffffff;
+        color: #000000;
+        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+      }
+      input,
+      button {
+        margin: 10px;
+        padding: 10px;
+      }
+      .banner {
+        width: 100%;
+        background-color: #ffd700;
+        color: #000;
+        padding: 10px;
+        font-size: 1.2em;
+        font-weight: bold;
+        text-align: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        transition: opacity 1s ease-in-out;
+      }
+      #time-display {
+        border: 2px solid #000;
+        border-radius: 5px;
+        padding: 5px;
+        background-color: #f8f8f8;
+        display: inline-block;
+        position: fixed;
+        top: 50px;
+        left: 0;
+        width: 100%;
+        font-size: 1em;
+        font-weight: bold;
+        text-align: center;
+        transition: background-color 0.3s, border-color 0.3s;
+      }
+      body.dark #time-display {
+        background-color: #333;
+        border-color: #fff;
+        color: #fff;
+      }
+      .warnings {
+        text-align: left;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .warning {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+      }
+      .warning-header {
+        font-size: 1.2em;
+        font-weight: bold;
+        margin-bottom: 5px;
+        text-align: center;
+      }
+      .warning-area {
+        font-style: italic;
+        text-align: center;
+        margin-bottom: 5px;
+      }
+      body.dark {
+        --menu-background-color: #333;
+        background-color: #1c1c1c;
+        color: #ffffff;
+      }
+      .warning.dark {
+        border: 1px solid #444;
+      }
+      .no-warnings {
+        padding: 20px;
+        background-color: #f8f8f8;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      body.dark .no-warnings {
+        background-color: #2c2c2c;
+        border: 1px solid #555;
+        color: #fff;
+      }
+      .desktop .warnings {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        max-width: 100%;
+      }
+      .right-menu {
+        position: fixed;
+        right: 0;
+        top: 110px;
+        width: 20vw;
+        min-width: 150px;
+        max-width: 300px;
+        padding: 15px;
+        border-left: 1px solid #ccc;
+        height: 100vh;
+        overflow-y: auto;
+        display: none;
+        z-index: 1100;
+        background-color: var(--menu-background-color);
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .image-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow-y: auto;
+        max-height: 85vh;
+      }
+      .image-container img {
+        width: 100%;
+        max-width: 300px;
+        margin: 5px auto;
+        display: block;
+      }
+      #side-menu {
+        position: fixed;
+        left: 0;
+        top: 110px;
+        width: 20vw;
+        min-width: 150px;
+        max-width: 300px;
+        padding: 15px;
+        border-right: 1px solid #ccc;
+        height: 100vh;
+        overflow-y: auto;
+        display: block;
+        z-index: 1100;
+        background-color: var(--menu-background-color);
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="side-menu">
+      <label for="sort-select">Sort by:</label>
+      <select id="sort-select" onchange="sortWarnings()">
+        <option value="severity-asc">Severity (Ascending)</option>
+        <option value="severity-desc">Severity (Descending)</option>
+        <option value="urgency-asc">Urgency (Ascending)</option>
+        <option value="urgency-desc">Urgency (Descending)</option>
+        <option value="sent-asc">Sent Time (Oldest First)</option>
+        <option value="sent-desc">Sent Time (Newest First)</option>
+      </select>
+      <button onclick="toggleBannerVisibility()" id="toggle-banner-btn">
+        Hide Banner
+      </button>
+      <input
+        type="text"
+        id="state"
+        placeholder="Enter state abbreviation (e.g., CA)"
+      />
+      <button onclick="getWarnings()">Get Warnings</button>
+      <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+      <button onclick="toggleLayout()" id="toggle-layout-btn">
+        Switch to Desktop View
+      </button>
+      <button
+        onclick="window.open('https://wg-warn-dash.glitch.me/streams.html', '_blank')"
+      >
+        Open Streams
+      </button>
+      <button
+        onclick="window.open('https://wg-warn-dash.glitch.me/map.html', '_blank')"
+      >
+        Open Alert Map
+      </button>
+    </div>
+    <div id="right-menu" class="right-menu">
+      <div class="image-container" id="spc-image-container">
+        <a
+          href="https://wg-warn-dash.glitch.me/spc/spccurrent.html"
+          target="_blank"
+        >
+          <img
+            id="img1"
+            src="https://www.spc.noaa.gov/products/activity_loop.gif"
+            alt="Activity Loop"
+          />
+        </a>
+        <a
+          href="https://wg-warn-dash.glitch.me/spc/spcday1.html"
+          target="_blank"
+        >
+          <img
+            id="img2"
+            src="https://climate.cod.edu/data/text/images/spc/co/day1/categorical/spccoday1.categorical.latest.png"
+            alt="Day 1 Outlook"
+          />
+        </a>
+        <a
+          href="https://wg-warn-dash.glitch.me/spc/spcday2.html"
+          target="_blank"
+        >
+          <img
+            id="img3"
+            src="https://climate.cod.edu/data/text/images/spc/co/day2/categorical/spccoday2.categorical.latest.png"
+            alt="Day 2 Outlook"
+          />
+        </a>
+        <a
+          href="https://wg-warn-dash.glitch.me/spc/spcday3.html"
+          target="_blank"
+        >
+          <img
+            id="img4"
+            src="https://climate.cod.edu/data/text/images/spc/co/day3/categorical/spccoday3.categorical.latest.png"
+            alt="Day 3 Outlook"
+          />
+        </a>
+        <a
+          href="https://wg-warn-dash.glitch.me/spc/spcday4to8.html"
+          target="_blank"
+        >
+          <img
+            id="day4to8"
+            src="https://climate.cod.edu/data/text/images/spc/co/day4/severe/spccoday4.severe.latest.png"
+            alt="Day 4-8 Probabilities"
+          />
+        </a>
+        <a
+          href="https://wg-warn-dash.glitch.me/spc/fireday1to8.html"
+          target="_blank"
+        >
+          <img
+            id="fireday1to8"
+            src="https://mesonet.agron.iastate.edu/plotting/auto/plot/220/which:1F::cat:categorical::t:state::csector:conus::_r:86::dpi:100.png"
+            alt="Fire Day 1 to 8 Outlooks"
+          />
+        </a>
+        <a
+          href="https://wg-warn-dash.glitch.me/wpc/wpcday1to5.html"
+          target="_blank"
+        >
+          <img
+            id="ero1to5"
+            src="https://mesonet.agron.iastate.edu/plotting/auto/plot/220/which:1E::cat:categorical::t:state::csector:conus::_r:86::dpi:100.png"
+            alt="ERO Day 1 to 5"
+          />
+        </a>
+      </div>
+    </div>
+    <div id="banner" class="banner">No new warnings available</div>
+    <div id="time-display">
+      Local Time: <span id="local-time"></span> | Zulu Time:
+      <span id="zulu-time"></span>
+    </div>
+    <h1>Weather Warnings</h1>
+    <button onclick="toggleSideMenu()" id="toggle-menu-btn">Hide Menu</button>
+    <button onclick="toggleSPCImages()">Toggle Outlooks</button>
+    <div class="warnings" id="warnings"></div>
+
+    <script>
+      function toggleSideMenu() {
+        const menu = document.getElementById("side-menu");
+        const button = document.getElementById("toggle-menu-btn");
+        if (menu.style.display === "none") {
+          menu.style.display = "block";
+          button.textContent = "Hide Menu";
+        } else {
+          menu.style.display = "none";
+          button.textContent = "Show Menu";
+        }
+      }
+
+      function toggleBannerVisibility() {
+        const banner = document.getElementById("banner");
+        const timeDisplay = document.getElementById("time-display");
+        const button = document.getElementById("toggle-banner-btn");
+        if (banner.style.display === "none") {
+          banner.style.display = "block";
+          timeDisplay.style.top = "50px"; // Reset time display position
+          button.textContent = "Hide Banner";
+        } else {
+          banner.style.display = "none";
+          timeDisplay.style.top = "10px"; // Move time display to the top when banner is hidden
+          button.textContent = "Show Banner";
+        }
+      }
+
+      let latestWarning = "";
+
+      const warningColors = {
+        "Tsunami Warning": { light: "#FD6347", dark: "#C75A3D" },
+        "Tornado Warning": { light: "#FF0000", dark: "#C70000" },
+        "Extreme Wind Warning": { light: "#FF8C00", dark: "#C67A00" },
+        "Severe Thunderstorm Warning": { light: "#FFA500", dark: "#C78F00" },
+        "Flash Flood Warning": { light: "#8B0000", dark: "#6F0000" },
+        "Flash Flood Statement": { light: "#8B0000", dark: "#6F0000" },
+        "Severe Weather Statement": { light: "#00FFFF", dark: "#00B2B2" },
+        "Shelter In Place Warning": { light: "#FA8072", dark: "#C76D63" },
+        "Evacuation Immediate": { light: "#7FFF00", dark: "#5FBF00" },
+        "Civil Danger Warning": { light: "#FFB6C1", dark: "#C78E99" },
+        "Nuclear Power Plant Warning": { light: "#4B0082", dark: "#3A006D" },
+        "Radiological Hazard Warning": { light: "#4B0082", dark: "#3A006D" },
+        "Hazardous Materials Warning": { light: "#4B0082", dark: "#3A006D" },
+        "Fire Warning": { light: "#A0522D", dark: "#7A3E23" },
+        "Civil Emergency Message": { light: "#FFB6C1", dark: "#C78E99" },
+        "Law Enforcement Warning": { light: "#C0C0C0", dark: "#A6A6A6" },
+        "Storm Surge Warning": { light: "#B524F7", dark: "#9F1ED6" },
+        "Hurricane Force Wind Warning": { light: "#CD5C5C", dark: "#A94D4D" },
+        "Hurricane Warning": { light: "#DC143C", dark: "#B91332" },
+        "Typhoon Warning": { light: "#DC143C", dark: "#B91332" },
+        "Special Marine Warning": { light: "#FFA500", dark: "#C78F00" },
+        "Blizzard Warning": { light: "#FF4500", dark: "#C73A00" },
+        "Snow Squall Warning": { light: "#C71585", dark: "#A50A6B" },
+        "Ice Storm Warning": { light: "#8B008B", dark: "#6D006D" },
+        "Heavy Freezing Spray Warning": { light: "#00BFFF", dark: "#0095CC" },
+        "Winter Storm Warning": { light: "#FF69B4", dark: "#C74E8B" },
+        "Lake Effect Snow Warning": { light: "#008B8B", dark: "#007A7A" },
+        "Dust Storm Warning": { light: "#FFE4C4", dark: "#E6C8B5" },
+        "Blowing Dust Warning": { light: "#FFE4C4", dark: "#E6C8B5" },
+        "High Wind Warning": { light: "#DAA520", dark: "#B89A1B" },
+        "Tropical Storm Warning": { light: "#B22222", dark: "#8E1A1A" },
+        "Storm Warning": { light: "#9400D3", dark: "#7500B3" },
+        "Tsunami Advisory": { light: "#D2691E", dark: "#A05215" },
+        "Tsunami Watch": { light: "#FF00FF", dark: "#C700C7" },
+        "Avalanche Warning": { light: "#1E90FF", dark: "#1788D6" },
+        "Earthquake Warning": { light: "#8B4513", dark: "#6A3A10" },
+        "Volcano Warning": { light: "#2F4F4F", dark: "#2A3D3D" },
+        "Ashfall Warning": { light: "#A9A9A9", dark: "#8B8B8B" },
+        "Flood Warning": { light: "#00FF00", dark: "#00BF00" },
+        "Coastal Flood Warning": { light: "#228B22", dark: "#1B7A1B" },
+        "Lakeshore Flood Warning": { light: "#228B22", dark: "#1B7A1B" },
+        "Ashfall Advisory": { light: "#696969", dark: "#545454" },
+        "High Surf Warning": { light: "#228B22", dark: "#1B7A1B" },
+        "Excessive Heat Warning": { light: "#C71585", dark: "#A60A68" },
+        "Tornado Watch": { light: "#FFFF00", dark: "#BFBF00" },
+        "Severe Thunderstorm Watch": { light: "#DB7093", dark: "#C16B82" },
+        "Flash Flood Watch": { light: "#2E8B57", dark: "#237D4A" },
+        "Gale Warning": { light: "#DDA0DD", dark: "#C18FC7" },
+        "Flood Statement": { light: "#00FF00", dark: "#00BF00" },
+        "Extreme Cold Warning": { light: "#0000FF", dark: "#0000BF" },
+        "Freeze Warning": { light: "#483D8B", dark: "#3B2D6D" },
+        "Red Flag Warning": { light: "#FF1493", dark: "#C60D7A" },
+        "Storm Surge Watch": { light: "#DB7FF7", dark: "#C165D1" },
+        "Hurricane Watch": { light: "#FF00FF", dark: "#C700C7" },
+        "Hurricane Force Wind Watch": { light: "#9932CC", dark: "#7A26A6" },
+        "Typhoon Watch": { light: "#FF00FF", dark: "#C700C7" },
+        "Tropical Storm Watch": { light: "#F08080", dark: "#C06C6C" },
+        "Storm Watch": { light: "#FFE4B5", dark: "#E6C8A4" },
+        "Tropical Cyclone Local Statement": {
+          light: "#FFE4B5",
+          dark: "#E6C8A4",
+        },
+        "Winter Weather Advisory": { light: "#7B68EE", dark: "#6B5BEF" },
+        "Avalanche Advisory": { light: "#CD853F", dark: "#A95D2F" },
+        "Cold Weather Advisory": { light: "#AFEEEE", dark: "#9DD4D4" },
+        "Heat Advisory": { light: "#FF7F50", dark: "#C76D3D" },
+        "Flood Advisory": { light: "#00FF7F", dark: "#00BF5F" },
+        "Coastal Flood Advisory": { light: "#7CFC00", dark: "#5FBF00" },
+        "Lakeshore Flood Advisory": { light: "#7CFC00", dark: "#5FBF00" },
+        "High Surf Advisory": { light: "#BA55D3", dark: "#A14BAE" },
+        "Dense Fog Advisory": { light: "#708090", dark: "#545C6D" },
+        "Dense Smoke Advisory": { light: "#F0E68C", dark: "#D7D56B" },
+        "Small Craft Advisory": { light: "#D8BFD8", dark: "#C2A5C2" },
+        "Brisk Wind Advisory": { light: "#D8BFD8", dark: "#C2A5C2" },
+        "Hazardous Seas Warning": { light: "#D8BFD8", dark: "#C2A5C2" },
+        "Dust Advisory": { light: "#BDB76B", dark: "#A69E54" },
+        "Blowing Dust Advisory": { light: "#BDB76B", dark: "#A69E54" },
+        "Lake Wind Advisory": { light: "#D2B48C", dark: "#BFAE76" },
+        "Wind Advisory": { light: "#D2B48C", dark: "#BFAE76" },
+        "Frost Advisory": { light: "#6495ED", dark: "#4F7BBE" },
+        "Freezing Fog Advisory": { light: "#008080", dark: "#007575" },
+        "Freezing Spray Advisory": { light: "#00BFFF", dark: "#0095CC" },
+        "Low Water Advisory": { light: "#A52A2A", dark: "#7B1F1F" },
+        "Local Area Emergency": { light: "#C0C0C0", dark: "#A6A6A6" },
+        "Winter Storm Watch": { light: "#4682B4", dark: "#3A6F8E" },
+        "Rip Current Statement": { light: "#40E0D0", dark: "#32B2B2" },
+        "Beach Hazards Statement": { light: "#40E0D0", dark: "#32B2B2" },
+        "Gale Watch": { light: "#FFC0CB", dark: "#D69DAE" },
+        "Avalanche Watch": { light: "#F4A460", dark: "#C58D4D" },
+        "Hazardous Seas Watch": { light: "#483D8B", dark: "#3B2D6D" },
+        "Heavy Freezing Spray Watch": { light: "#BC8F8F", dark: "#A76D6D" },
+        "Flood Watch": { light: "#2E8B57", dark: "#237D4A" },
+        "Coastal Flood Watch": { light: "#66CDAA", dark: "#4DB69D" },
+        "Lakeshore Flood Watch": { light: "#66CDAA", dark: "#4DB69D" },
+        "High Wind Watch": { light: "#B8860B", dark: "#9D6E08" },
+        "Excessive Heat Watch": { light: "#800000", dark: "#5F0000" },
+        "Extreme Cold Watch": { light: "#5F9EA0", dark: "#4B7A7D" },
+        "Freeze Watch": { light: "#00FFFF", dark: "#00BFBF" },
+        "Fire Weather Watch": { light: "#FFDEAD", dark: "#C7B8A7" },
+        "Extreme Fire Danger": { light: "#E9967A", dark: "#C76D5A" },
+        "911 Telephone Outage": { light: "#C0C0C0", dark: "#A6A6A6" },
+        "Coastal Flood Statement": { light: "#6B8E23", dark: "#547721" },
+        "Lakeshore Flood Statement": { light: "#6B8E23", dark: "#547721" },
+        "Special Weather Statement": { light: "#FFE4B5", dark: "#CCB192" },
+        "Marine Weather Statement": { light: "#FFDAB9", dark: "#D8B699" },
+        "Air Quality Alert": { light: "#808080", dark: "#646464" },
+        "Air Stagnation Advisory": { light: "#808080", dark: "#646464" },
+        "Hazardous Weather Outlook": { light: "#EEE8AA", dark: "#D0D079" },
+        "Hydrologic Outlook": { light: "#90EE90", dark: "#70D570" },
+        "Short Term Forecast": { light: "#98FB98", dark: "#78D678" },
+        "Administrative Message": { light: "#C0C0C0", dark: "#A6A6A6" },
+      };
+
+      function updateBanner(newWarning, senderName) {
+        const banner = document.getElementById("banner");
+        if (newWarning && newWarning !== latestWarning) {
+          latestWarning = newWarning;
+          banner.textContent = `Latest Warning: ${latestWarning} (Sent by: ${senderName})`;
+
+          // Flash the banner by gradually fading in and out for 15 seconds
+          let flashCount = 0;
+          banner.style.opacity = "1";
+          const flashInterval = setInterval(() => {
+            banner.style.opacity = banner.style.opacity === "1" ? "0" : "1";
+            flashCount++;
+            if (flashCount >= 15) {
+              clearInterval(flashInterval);
+              banner.style.opacity = "1"; // Ensure it stays visible
+            }
+          }, 1000);
+
+          // Alternate the site title for 15 seconds
+          let titleCount = 0;
+          const originalTitle = document.title;
+          const titleInterval = setInterval(() => {
+            document.title =
+              document.title === "(1) New Weather Warning"
+                ? originalTitle
+                : "(1) New Weather Warning";
+            titleCount++;
+            if (titleCount >= 15) {
+              clearInterval(titleInterval);
+              document.title = originalTitle; // Ensure title is reset
+            }
+          }, 1000);
+        }
+      }
+
+      function toggleSPCImages() {
+        const imageContainer = document.getElementById("spc-image-container");
+        imageContainer.style.display =
+          imageContainer.style.display === "none" ? "block" : "none";
+      }
+
+      function getLatestWarning() {
+        fetch(`https://api.weather.gov/alerts/active`)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.features.length > 0) {
+              const latestAlert = data.features[0].properties.event;
+              updateBanner(latestAlert, data.features[0].properties.senderName);
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching latest warning:", error);
+          });
+      }
+
+      function getWarningColor(event, mode) {
+        return warningColors[event]
+          ? warningColors[event][mode]
+          : mode === "dark"
+          ? "#2c2c2c"
+          : "#FFFFFF";
+      }
+
+      function getWarnings() {
+        const state = document.getElementById("state").value.toUpperCase();
+        if (!state || state.length !== 2) {
+          alert("Please enter a valid 2-letter state abbreviation.");
+          return;
+        }
+
+        fetch(`https://api.weather.gov/alerts/active?area=${state}`)
+          .then((response) => response.json())
+          .then((data) => {
+            const warningsDiv = document.getElementById("warnings");
+            warningsDiv.innerHTML = "";
+
+            if (data.features.length === 0) {
+              const noWarn = document.createElement("p");
+              noWarn.className = "no-warnings";
+              noWarn.textContent = "No active warnings for this state.";
+              warningsDiv.appendChild(noWarn);
+              return;
+            }
+
+            data.features.forEach((alert) => {
+              const div = document.createElement("div");
+              div.classList.add("warning");
+
+              // Set data attributes for sorting
+              div.setAttribute(
+                "data-severity",
+                alert.properties.severity || ""
+              );
+              div.setAttribute("data-urgency", alert.properties.urgency || "");
+              div.setAttribute("data-sent", alert.properties.sent || "");
+
+              // Apply color based on the event
+              const mode = document.body.classList.contains("dark")
+                ? "dark"
+                : "light";
+              div.style.backgroundColor = getWarningColor(
+                alert.properties.event,
+                mode
+              );
+
+              const header = document.createElement("div");
+              header.classList.add("warning-header");
+              header.textContent = alert.properties.event;
+              div.appendChild(header);
+
+              const area = document.createElement("div");
+              area.classList.add("warning-area");
+              area.textContent = alert.properties.areaDesc;
+              div.appendChild(area);
+
+              const descriptionText = alert.properties.description
+                ? `<strong style='text-align: left; display: block;'>Alert Description:</strong><br>${alert.properties.description.replace(
+                    /\n/g,
+                    "<br>"
+                  )}`
+                : "";
+              const instructionText = alert.properties.instruction
+                ? `<strong style='text-align: left; display: block;'>Instructions:</strong><br>${alert.properties.instruction.replace(
+                    /\n/g,
+                    "<br>"
+                  )}`
+                : "";
+              const combinedText = `${descriptionText}<br><br>${instructionText}`;
+
+              const content = document.createElement("p");
+              content.innerHTML = `<em>${alert.properties.headline}</em><br><br>${combinedText}`;
+              div.appendChild(content);
+
+              warningsDiv.appendChild(div);
+            });
+          })
+          .catch((error) => {
+            console.error("Error fetching data:", error);
+            alert("Failed to fetch warnings. Please try again later.");
+          });
+      }
+
+      function sortWarnings() {
+        const sortOption = document.getElementById("sort-select").value;
+        const warningsDiv = document.getElementById("warnings");
+        const warnings = Array.from(
+          warningsDiv.getElementsByClassName("warning")
+        );
+
+        warnings.sort((a, b) => {
+          const aSeverity = a.getAttribute("data-severity") || "";
+          const bSeverity = b.getAttribute("data-severity") || "";
+          const aUrgency = a.getAttribute("data-urgency") || "";
+          const bUrgency = b.getAttribute("data-urgency") || "";
+          const aSent = a.getAttribute("data-sent") || "";
+          const bSent = b.getAttribute("data-sent") || "";
+
+          switch (sortOption) {
+            case "severity-asc":
+              return aSeverity.localeCompare(bSeverity);
+            case "severity-desc":
+              return bSeverity.localeCompare(aSeverity);
+            case "urgency-asc":
+              return aUrgency.localeCompare(bUrgency);
+            case "urgency-desc":
+              return bUrgency.localeCompare(aUrgency);
+            case "sent-asc":
+              return aSent.localeCompare(bSent);
+            case "sent-desc":
+              return bSent.localeCompare(aSent);
+            default:
+              return 0;
+          }
+        });
+
+        // Clear and append sorted warnings
+        warningsDiv.innerHTML = "";
+        warnings.forEach((warning) => warningsDiv.appendChild(warning));
+      }
+
+      function toggleDarkMode() {
+        document.body.classList.toggle("dark");
+      }
+
+      function toggleLayout() {
+        const body = document.body;
+        const button = document.getElementById("toggle-layout-btn");
+        if (body.classList.contains("desktop")) {
+          body.classList.remove("desktop");
+          button.textContent = "Switch to Desktop View";
+        } else {
+          body.classList.add("desktop");
+          button.textContent = "Switch to Mobile View";
+        }
+      }
+
+      // Update the banner every 30 seconds
+      setInterval(() => {
+        getLatestWarning();
+        getWarnings();
+      }, 30000);
+
+      function updateTime() {
+        const now = new Date();
+        const localTime = now.toLocaleTimeString();
+        const zuluTime = now.toISOString().split("T")[1].split(".")[0] + "Z";
+        document.getElementById("local-time").textContent = localTime;
+        document.getElementById("zulu-time").textContent = zuluTime;
+      }
+
+      function toggleSPCImages() {
+        const rightMenu = document.getElementById("right-menu");
+        rightMenu.style.display =
+          rightMenu.style.display === "none" ? "block" : "none";
+      }
+
+      function refreshImages() {
+        const timestamp = new Date().getTime();
+        document.getElementById(
+          "img1"
+        ).src = `https://www.spc.noaa.gov/products/activity_loop.gif?${timestamp}`;
+        document.getElementById(
+          "img2"
+        ).src = `https://climate.cod.edu/data/text/images/spc/co/day1/categorical/spccoday1.categorical.latest.png?${timestamp}`;
+        document.getElementById(
+          "img3"
+        ).src = `https://climate.cod.edu/data/text/images/spc/co/day2/categorical/spccoday2.categorical.latest.png?${timestamp}`;
+        document.getElementById(
+          "img4"
+        ).src = `https://climate.cod.edu/data/text/images/spc/co/day3/categorical/spccoday3.categorical.latest.png?${timestamp}`;
+      }
+
+      setInterval(refreshImages, 30000);
+
+const eroImages = [
+        "https://mesonet.agron.iastate.edu/plotting/auto/plot/220/which:1E::cat:categorical::t:state::csector:conus::_r:86::dpi:100.png",
+        "https://mesonet.agron.iastate.edu/plotting/auto/plot/220/which:2E::cat:categorical::t:state::csector:conus::_r:86::dpi:100.png",
+        "https://mesonet.agron.iastate.edu/plotting/auto/plot/220/which:3E::cat:categorical::t:state::csector:conus::_r:86::dpi:100.png",
+        "https://mesonet.agron.iastate.edu/plotting/auto/plot/220/which:4E::cat:categorical::t:state::csector:conus::_r:86::dpi:100.png",
+        "https://mesonet.agron.iastate.edu/plotting/auto/plot/220/which:5E::cat:categorical::t:state::csector:conus::_r:86::dpi:100.png",
+      ];
+      let eroIndex = 0;
+
+      function cycleeroImages() {
+        const img = document.getElementById("ero1to5");
+        eroIndex = (eroIndex + 1) % eroImages.length;
+        img.src = eroImages[eroIndex] + "?" + new Date().getTime();
+      }
+
+      setInterval(cycleeroImages, 4000);
+
+      const fireImages = [
+        "https://mesonet.agron.iastate.edu/plotting/auto/plot/220/which:1F::cat:categorical::t:state::csector:conus::_r:86::dpi:100.png",
+        "https://mesonet.agron.iastate.edu/plotting/auto/plot/220/which:2F::cat:categorical::t:state::csector:conus::_r:86::dpi:100.png",
+        "https://mesonet.agron.iastate.edu/plotting/auto/plot/220/which:0F::cat:categorical::t:state::csector:conus::_r:86::dpi:100.png",
+      ];
+      let fireIndex = 0;
+
+      function cycleFireImages() {
+        const img = document.getElementById("fireday1to8");
+        fireIndex = (fireIndex + 1) % fireImages.length;
+        img.src = fireImages[fireIndex] + "?" + new Date().getTime();
+      }
+
+      setInterval(cycleFireImages, 4000);
+
+      const dayImages = [
+        "https://climate.cod.edu/data/text/images/spc/co/day4/severe/spccoday4.severe.latest.png",
+        "https://climate.cod.edu/data/text/images/spc/co/day5/severe/spccoday5.severe.latest.png",
+        "https://climate.cod.edu/data/text/images/spc/co/day6/severe/spccoday6.severe.latest.png",
+        "https://climate.cod.edu/data/text/images/spc/co/day7/severe/spccoday7.severe.latest.png",
+        "https://climate.cod.edu/data/text/images/spc/co/day8/severe/spccoday8.severe.latest.png",
+      ];
+      let dayIndex = 0;
+
+      function cycleDayImages() {
+        const img = document.getElementById("day4to8");
+        dayIndex = (dayIndex + 1) % dayImages.length;
+        img.src = dayImages[dayIndex] + "?" + new Date().getTime();
+      }
+
+      setInterval(cycleDayImages, 4000);
+
+      // Update the time every second
+      setInterval(updateTime, 1000);
+      updateTime();
+    </script>
+  </body>
+</html>

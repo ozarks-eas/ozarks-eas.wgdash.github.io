@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Day 1 to 8 Fire</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://cdn.glitch.global/10289291-dda7-497d-a43c-f017e0457b15/image_2023-12-16_172444899.png?v=1739490392300"
+    />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 20px;
+        background-color: #ffffff;
+        color: #000000;
+        transition: background-color 0.3s, color 0.3s;
+      }
+      body.dark {
+        background-color: #1c1c1c;
+        color: #ffffff;
+      }
+      .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        justify-items: center;
+        align-items: center;
+      }
+      .grid-container img {
+        width: 100%;
+        max-width: 600px;
+        height: auto;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      .grid-container img:only-child,
+      .grid-container > img:nth-last-child(1):nth-child(odd) {
+        width: 100%;
+        max-width: 600px;
+        grid-column: span 2;
+        justify-self: center;
+      }
+      button {
+        margin: 10px;
+        padding: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>SPC Day 1 to 8 Fire Weather Outlook</h1>
+    <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+    <a href="https://wg-warn-dash.glitch.me/">
+      <button>Home</button>
+    </a>
+    <div class="grid-container">
+      <img
+        id="day1"
+        src="https://mesonet.agron.iastate.edu/plotting/auto/plot/220/which:1F::cat:categorical::t:state::network:WFO::wfo:DMX::fema:7::csector:conus::valid:2025-03-21%201711::_r:169::dpi:100::_cb:1.png"
+        alt="Day 1 Outlook"
+      />
+      <img
+        id="day2"
+        src="https://mesonet.agron.iastate.edu/plotting/auto/plot/220/which:2F::cat:categorical::t:state::network:WFO::wfo:DMX::fema:7::csector:conus::valid:2025-03-21%201711::_r:169::dpi:100::_cb:1.png"
+        alt="Day 2 Outlook"
+      />
+      <img
+        id="day3to8"
+        src="https://mesonet.agron.iastate.edu/plotting/auto/plot/220/which:0F::cat:categorical::t:state::network:WFO::wfo:DMX::fema:7::csector:conus::valid:2025-03-21%201711::_r:169::dpi:100::_cb:1.png"
+        alt="Day 3 to 8 Outlook"
+      />
+      <a href="https://wg-warn-dash.glitch.me/wpc/drought.html" target="_blank">
+        <img
+          id="drought"
+          src="https://droughtmonitor.unl.edu/data/png/current/current_conus_trd.png"
+          alt="Drought Monitor"
+        />
+      </a>
+    </div>
+    <script>
+      function refreshGridImages() {
+        const timestamp = new Date().getTime();
+        document.getElementById("day1").src = `https://mesonet.agron.iastate.edu/plotting/auto/plot/220/which:1F::cat:categorical::t:state::network:WFO::wfo:DMX::fema:7::csector:conus::valid:2025-03-21%201711::_r:169::dpi:100::_cb:1.png?${timestamp}`;
+        document.getElementById("day2").src = `https://mesonet.agron.iastate.edu/plotting/auto/plot/220/which:2F::cat:categorical::t:state::network:WFO::wfo:DMX::fema:7::csector:conus::valid:2025-03-21%201711::_r:169::dpi:100::_cb:1.png?${timestamp}`;
+        document.getElementById("day3to8").src = `https://mesonet.agron.iastate.edu/plotting/auto/plot/220/which:0F::cat:categorical::t:state::network:WFO::wfo:DMX::fema:7::csector:conus::valid:2025-03-21%201711::_r:169::dpi:100::_cb:1.png?${timestamp}`;
+        document.getElementById("drought").src = `https://droughtmonitor.unl.edu/data/png/current/current_conus_trd.png?${timestamp}`;
+      }
+
+      function toggleDarkMode() {
+        document.body.classList.toggle("dark");
+      }
+
+      setInterval(refreshGridImages, 30000);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "chat-feed-fetcher",
+  "version": "1.0.0",
+  "description": "Chat Feed Fetcher",
+  "main": "IEMAPI.py",
+  "scripts": {
+    "start": "python3 IEMAPI.py"
+  },
+  "dependencies": {}
+}

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Top Weather Alert Banner</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #1e1e2f;
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+      .alert-box {
+        width: 1609px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        padding: 0 30px;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+      }
+      .event-container {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .details-box {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+        font-size: 18px;
+        font-weight: bold;
+        background-color: black;
+        padding: 10px;
+        border-radius: 5px;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="alert-box" id="alertBox">
+      <div class="event-container">
+        <span id="event" style="font-weight: bold"></span>
+        <div class="details-box">
+          <span id="location"></span>
+          <span id="expires"></span>
+        </div>
+      </div>
+    </div>
+    <script>
+      let alerts = [];
+      let currentAlertIndex = 0;
+      const alertColors = {
+        "Tornado Warning": { bg: "#FF0000", text: "white" },
+        "Flash Flood Warning": { bg: "#8B0000", text: "white" },
+        "Severe Thunderstorm Warning": { bg: "#FFA500", text: "white" },
+        "Tornado Watch": { bg: "#FFFF00", text: "black" },
+        "Severe Thunderstorm Watch": { bg: "#DB7093", text: "black" },
+      };
+
+      const hazardTranslations = {
+        "60 mph wind gusts": "Winds: 60 MPH",
+        "70 mph wind gusts": "Winds: 70 MPH",
+        "80 mph wind gusts": "Winds: 80 MPH",
+        "90 mph wind gusts": "Winds: 90 MPH",
+        "100 mph wind gusts": "Winds: 100 MPH",
+        "penny size hail": "Hail: 0.75 IN",
+        "nickel size hail": "Hail: 0.88 IN",
+        "quarter size hail": "Hail: 1.00 IN",
+        "half dollar size hail": "Hail: 1.25 IN",
+        "ping pong size hail": "Hail: 1.50 IN",
+        "golf ball size hail": "Hail: 1.75 IN",
+        "two inch hail": "Hail: 2.00 IN",
+        "tennis ball size hail": "Hail: 2.50 IN",
+        "baseball size hail": "Hail: 2.75 IN",
+        "three inch hail": "Hail: 3.00 IN",
+        "softball size hail": "Hail: 4.00 IN",
+        "grapefruit size hail": "Hail: 4.50 IN",
+        "dvd size hail": "Hail: 5.00 IN",
+        "radar indicated rotation": "Tornado: RADAR INDICATED",
+        "damaging tornado": "Tornado: OBSERVED",
+        "large and extremely dangerous tornado": "Tornado Threat: CONSIDERABLE",
+        "large and destructive tornado": "Tornado Threat: DESTRUCTIVE",
+        "flash flooding is ongoing or expected to begin shortly":
+          "Flash Flood: RADAR INDICATED",
+        "flash flooding is already occurring": "Flash Flood: OBSERVED",
+        "life threatening flash flooding": "Flood Threat: CONSIDERABLE",
+        "this is an extremely dangerous and life-threatening situation":
+          "Flood Threat: CATASTROPHIC",
+      };
+
+      async function fetchAlerts() {
+        try {
+          const response = await fetch("https://api.weather.gov/alerts/active");
+          const data = await response.json();
+          const validAlerts = Object.keys(alertColors);
+          alerts = data.features
+            .map((alert) => alert.properties)
+            .filter((alert) => validAlerts.includes(alert.event));
+
+          alerts.sort((a, b) => {
+            const getPriority = (alert) => {
+              const desc = alert.description?.toLowerCase() || "";
+              if (
+                desc.includes("large and destructive tornado") ||
+                desc.includes(
+                  "this is an extremely dangerous and life-threatening situation"
+                )
+              )
+                return 0;
+              if (
+                desc.includes("large and extremely dangerous tornado") ||
+                desc.includes("life threatening flash flooding")
+              )
+                return 1;
+              if (alert.event === "Tornado Warning") return 2;
+              if (alert.event === "Severe Thunderstorm Warning") return 3;
+              if (alert.event === "Flash Flood Warning") return 4;
+              if (alert.event === "Tornado Watch") return 5;
+              if (alert.event === "Severe Thunderstorm Watch") return 6;
+              return 7;
+            };
+            return getPriority(a) - getPriority(b);
+          });
+
+          currentAlertIndex = 0;
+          if (alerts.length > 0) {
+            cycleAlerts();
+          } else {
+            updateAlertBox();
+          }
+        } catch (error) {
+          console.error("Error fetching weather alerts:", error);
+        }
+      }
+
+      function updateAlertBox() {
+        const eventEl = document.getElementById("event");
+        const locationEl = document.getElementById("location");
+        const expiresEl = document.getElementById("expires");
+        const alertBox = document.getElementById("alertBox");
+
+        locationEl.style.color = "white";
+        expiresEl.style.color = "white";
+
+        if (alerts.length > 0) {
+          const alert = alerts[currentAlertIndex];
+          eventEl.textContent = alert.event;
+          locationEl.textContent =
+            alert.areaDesc.length > 125
+              ? alert.areaDesc.substring(0, 122) + "..."
+              : alert.areaDesc;
+
+          let description = alert.description?.toLowerCase() || "";
+          let hazardText = Object.keys(hazardTranslations)
+            .filter((hazard) => description.includes(hazard))
+            .map((hazard) => hazardTranslations[hazard])
+            .join(" || ");
+
+          expiresEl.textContent =
+            "Expires: " +
+            new Date(alert.expires).toLocaleString() +
+            (hazardText ? " || " + hazardText : "");
+
+          const alertStyle = alertColors[alert.event];
+          alertBox.style.backgroundColor = alertStyle.bg;
+          eventEl.style.color = alertStyle.text;
+
+          currentAlertIndex++;
+          if (currentAlertIndex >= alerts.length) {
+            setTimeout(fetchAlerts, 5000);
+          } else {
+            setTimeout(updateAlertBox, 5000);
+          }
+        } else {
+          eventEl.textContent = "No active severe weather alerts";
+          locationEl.textContent = "";
+          expiresEl.textContent = "";
+          alertBox.style.backgroundColor = "gray";
+          eventEl.style.color = "white";
+        }
+      }
+
+      function cycleAlerts() {
+        currentAlertIndex = 0;
+        updateAlertBox();
+      }
+
+      fetchAlerts();
+    </script>
+  </body>
+</html>

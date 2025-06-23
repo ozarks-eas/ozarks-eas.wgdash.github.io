@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EAS/NOAA Streams</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://cdn.glitch.global/10289291-dda7-497d-a43c-f017e0457b15/image_2023-12-16_172444899.png?v=1739490392300"
+    />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        color: #000;
+        text-align: center;
+        padding: 20px;
+        transition: background-color 0.3s, color 0.3s;
+      }
+      body.dark {
+        background-color: #1c1c1c;
+        color: #fff;
+      }
+      h1 {
+        margin-bottom: 20px;
+      }
+      .category {
+        margin: 30px 0;
+      }
+      .stream-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        justify-items: center;
+      }
+      .stream {
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 10px;
+        background-color: #fff;
+        transition: background-color 0.3s;
+        width: 100%;
+        max-width: 500px;
+      }
+      body.dark .stream {
+        background-color: #333;
+        border-color: #555;
+      }
+      .stream-content {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .status {
+        font-weight: bold;
+        margin-top: 5px;
+      }
+      .status.live {
+        color: green;
+      }
+      .status.offline {
+        color: red;
+      }
+      body.dark .status.live {
+        color: #00ff00;
+      }
+      body.dark .status.offline {
+        color: #ff5555;
+      }
+      button {
+        padding: 10px;
+        margin: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>EAS/NOAA Weather Radio Streams</h1>
+    <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+    <button onclick="window.location.href='https://wg-warn-dash.glitch.me/'">
+      Home
+    </button>
+
+    <div class="category">
+      <h2>EAS Live Streams</h2>
+      <div id="eas-streams" class="stream-grid"></div>
+    </div>
+
+    <div class="category">
+      <h2>NOAA Weather Radio</h2>
+      <div id="nwr-streams" class="stream-grid"></div>
+    </div>
+
+    <script>
+      const easStreams = [
+        { url: "https://icecast.gwes-eas.network/ERN-BVL", name: "ERN/BVL" },
+        { url: "https://icecast.sirenarchive.xyz/MP3/KGRX", name: "ERN/GRX" },
+        { url: "http://sirenarchive.xyz:8000/WFNM", name: "WFNM" },
+        { url: "https://icecast.gwes-eas.network/ERN-LB", name: "ERN/LB" },
+        { url: "https://icecast.gwes-eas.network/ERN-CRTV", name: "ERN/CRTV" },
+        { url: "https://icecast.gwes-eas.network/ERN-DON", name: "ERN/DON" },
+        { url: "https://icecast.gwes-eas.network/ERN-JON", name: "ERN/JON" },
+        { url: "https://icecast.gwes-eas.network/ERN-KLT", name: "ERN/KLT" },
+      ];
+
+      const nwrStreams = [
+        {
+          url: "https://icecast.wxstream.org/NWR/WNG694",
+          name: "WNG694 - Springdale AR",
+          id: "WNG694",
+        },
+        {
+          url: "https://icecast.sirenarchive.xyz/NWR/WXJ61",
+          name: "WXJ61 - Avilla MO",
+          id: "WXJ61",
+        },
+        {
+          url: "https://icecast.sirenarchive.xyz/NWR/WXL46",
+          name: "WXL46 - Fordland MO",
+          id: "WXL46",
+        },
+        {
+          url: "https://wxradio.org/FL-Orlando-KIH63",
+          name: "KIH63 - Orlando FL",
+          id: "KIH63",
+        },
+        {
+          url: "https://wxradio.org/OK-Tulsa-KIH27",
+          name: "KIH27 - Tulsa OK",
+          id: "KIH27",
+        },
+      ];
+
+      function createStreamElements(streams, containerId, isNOAA = false) {
+        const container = document.getElementById(containerId);
+        streams.forEach((stream) => {
+          const div = document.createElement("div");
+          div.className = "stream";
+          let coverageButton = "";
+          if (isNOAA) {
+            coverageButton = `<button onclick=\"window.open('https://radiostation.info/images/wxmap/${stream.id}.png', '_blank')\">Coverage Map</button>`;
+          }
+          div.innerHTML = `
+          <div><strong>${stream.name}</strong></div>
+          <div class=\"stream-content\">
+            <audio controls preload="none" style="flex: 1;">
+              <source src="${stream.url}" type="audio/mpeg">
+              Your browser does not support the audio element.
+            </audio>
+            ${coverageButton}
+          </div>
+          <div class="status" id="status-${stream.name}">Checking status...</div>
+        `;
+          container.appendChild(div);
+        });
+      }
+
+      function updateStreamStatus(streams) {
+        streams.forEach((stream) => {
+          const audio = new Audio();
+          audio.src = stream.url;
+          audio.addEventListener("canplay", () => {
+            const statusEl = document.getElementById(`status-${stream.name}`);
+            statusEl.textContent = "Live";
+            statusEl.classList.remove("offline");
+            statusEl.classList.add("live");
+          });
+          audio.addEventListener("error", () => {
+            const statusEl = document.getElementById(`status-${stream.name}`);
+            statusEl.textContent = "Offline";
+            statusEl.classList.remove("live");
+            statusEl.classList.add("offline");
+          });
+        });
+      }
+
+      function refreshStatus() {
+        updateStreamStatus(easStreams);
+        updateStreamStatus(nwrStreams);
+      }
+
+      function toggleDarkMode() {
+        document.body.classList.toggle("dark");
+      }
+
+      createStreamElements(easStreams, "eas-streams");
+      createStreamElements(nwrStreams, "nwr-streams", true);
+      refreshStatus();
+      setInterval(refreshStatus, 30000);
+    </script>
+  </body>
+</html>

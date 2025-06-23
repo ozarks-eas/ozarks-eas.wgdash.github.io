@@ -1,0 +1,382 @@
+{
+    "messages": [
+        {
+            "seqnum": 43425960,
+            "ts": "2025-03-27 10:18:54",
+            "author": "iembot",
+            "product_id": "202503271018-KSGF-FXUS63-AFDSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503271018-KSGF-FXUS63-AFDSGF'>Area Forecast Discussion (AFD)</a> at Mar 27, 5:18 AM CDT</p></body>"
+        },
+        {
+            "seqnum": 43427750,
+            "ts": "2025-03-27 12:16:38",
+            "author": "iembot",
+            "product_id": "",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>The Weather Prediction Center issues <a href='https://www.wpc.ncep.noaa.gov/qpf/excessive_rainfall_outlook_ero.php'>Day 1 Marginal Risk Excessive Rainfall Outlook</a> at Mar 27, 8:21z for portions of SGF's area</p></body>"
+        },
+        {
+            "seqnum": 43427960,
+            "ts": "2025-03-27 12:17:41",
+            "author": "iembot",
+            "product_id": "",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>The Weather Prediction Center issues <a href='https://www.wpc.ncep.noaa.gov/qpf/excessive_rainfall_outlook_ero.php'>Day 4 Marginal Risk Excessive Rainfall Outlook</a> at Mar 27, 7:52z for portions of SGF's area</p></body>"
+        },
+        {
+            "seqnum": 43428498,
+            "ts": "2025-03-27 12:59:28",
+            "author": "iembot",
+            "product_id": "202503271256-KWNS-WUUS01-PTSDY1",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>The Storm Prediction Center issues <a href='https://www.spc.noaa.gov/products/outlook/archive/2025/day1otlk_20250327_1300.html'>Day 1 Marginal Convective Risk</a> at Mar 27, 12:56z for portions of SGF's area</p></body>"
+        },
+        {
+            "seqnum": 43431007,
+            "ts": "2025-03-27 16:31:40",
+            "author": "iembot",
+            "product_id": "202503271628-KWNS-WUUS01-PTSDY1",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>The Storm Prediction Center issues <a href='https://www.spc.noaa.gov/products/outlook/archive/2025/day1otlk_20250327_1630.html'>Day 1 Marginal Convective Risk</a> at Mar 27, 16:28z for portions of SGF's area</p></body>"
+        },
+        {
+            "seqnum": 43432587,
+            "ts": "2025-03-27 17:39:26",
+            "author": "iembot",
+            "product_id": "202503271738-KSGF-FXUS63-AFDSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503271738-KSGF-FXUS63-AFDSGF'>Area Forecast Discussion (AFD)</a> at Mar 27, 12:38 PM CDT</p></body>"
+        },
+        {
+            "seqnum": 43433331,
+            "ts": "2025-03-27 18:28:16",
+            "author": "iembot",
+            "product_id": "202503271738-KSGF-FGUS73-ESFSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503271738-KSGF-FGUS73-ESFSGF'>Hydrologic Outlook (ESF)</a> at Mar 27, 12:38 PM CDT</p></body>"
+        },
+        {
+            "seqnum": 43433568,
+            "ts": "2025-03-27 18:46:09",
+            "author": "iembot",
+            "product_id": "202503271845-KSGF-FNUS63-RFDSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503271845-KSGF-FNUS63-RFDSGF'>Grassland Fire Danger (RFD)</a> at Mar 27, 1:45 PM CDT</p></body>"
+        },
+        {
+            "seqnum": 43434556,
+            "ts": "2025-03-27 19:29:34",
+            "author": "iembot",
+            "product_id": "202503271927-KWNS-WUUS03-PTSDY3",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>The Storm Prediction Center issues <a href='https://www.spc.noaa.gov/products/outlook/archive/2025/day3otlk_20250327_1930.html'>Day 3 Slight Convective Risk</a> at Mar 27, 19:27z for portions of SGF's area</p></body>"
+        },
+        {
+            "seqnum": 43434917,
+            "ts": "2025-03-27 19:48:46",
+            "author": "iembot",
+            "product_id": "202503271947-KWNS-WUUS01-PTSDY1",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>The Storm Prediction Center issues <a href='https://www.spc.noaa.gov/products/outlook/archive/2025/day1otlk_20250327_2000.html'>Day 1 Marginal Convective Risk</a> at Mar 27, 19:47z for portions of SGF's area</p></body>"
+        },
+        {
+            "seqnum": 43435085,
+            "ts": "2025-03-27 19:54:52",
+            "author": "iembot",
+            "product_id": "202503271954-KSGF-FXUS63-AFDSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503271954-KSGF-FXUS63-AFDSGF'>Area Forecast Discussion (AFD)</a> at Mar 27, 2:54 PM CDT</p></body>"
+        },
+        {
+            "seqnum": 43435206,
+            "ts": "2025-03-27 20:00:51",
+            "author": "iembot",
+            "product_id": "202503272000-KSGF-FLUS43-HWOSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503272000-KSGF-FLUS43-HWOSGF'>Hazardous Weather Outlook (HWO)</a> at Mar 27, 3:00 PM CDT</p></body>"
+        },
+        {
+            "seqnum": 43436593,
+            "ts": "2025-03-27 21:16:59",
+            "author": "iembot",
+            "product_id": "202503272115-KSGF-CDUS43-CLIVIH",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>VICHY-ROLLA MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503272115-KSGF-CDUS43-CLIVIH'>Mar 27 Climate Report</a>: High: 81 Low: 48 Precip: 0.0\" Snow: Missing</body>"
+        },
+        {
+            "seqnum": 43436595,
+            "ts": "2025-03-27 21:16:59",
+            "author": "iembot",
+            "product_id": "202503272115-KSGF-CDUS43-CLIJLN",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>JOPLIN MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503272115-KSGF-CDUS43-CLIJLN'>Mar 27 Climate Report</a>: High: 81 Low: 55 Precip: 0.0\" Snow: Missing</body>"
+        },
+        {
+            "seqnum": 43436597,
+            "ts": "2025-03-27 21:16:59",
+            "author": "iembot",
+            "product_id": "202503272115-KSGF-CDUS43-CLIUNO",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>WEST PLAINS MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503272115-KSGF-CDUS43-CLIUNO'>Mar 27 Climate Report</a>: High: 82 Low: 48 Precip: 0.0\" Snow: Missing</body>"
+        },
+        {
+            "seqnum": 43436599,
+            "ts": "2025-03-27 21:17:00",
+            "author": "iembot",
+            "product_id": "202503272115-KSGF-CDUS43-CLISGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>SPRINGFIELD MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503272115-KSGF-CDUS43-CLISGF'>Mar 27 Climate Report</a>: High: 81 Low: 53 Precip: 0.0\" Snow: 0.0\" Snow Depth: 0\"</body>"
+        },
+        {
+            "seqnum": 43436705,
+            "ts": "2025-03-27 21:23:16",
+            "author": "iembot",
+            "product_id": "202503272120-KSGF-SXUS73-RERSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503272120-KSGF-SXUS73-RERSGF'>Record Event Report (RER)</a> at Mar 27, 4:20 PM CDT</p></body>"
+        },
+        {
+            "seqnum": 43437796,
+            "ts": "2025-03-27 22:20:33",
+            "author": "iembot",
+            "product_id": "202503272219-KSGF-CDUS43-CLIUNO",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>WEST PLAINS MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503272219-KSGF-CDUS43-CLIUNO'>Mar 27 Climate Report</a>: High: 82 Low: 48 Precip: 0.0\" Snow: Missing</body>"
+        },
+        {
+            "seqnum": 43437798,
+            "ts": "2025-03-27 22:20:33",
+            "author": "iembot",
+            "product_id": "202503272219-KSGF-CDUS43-CLIVIH",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>VICHY-ROLLA MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503272219-KSGF-CDUS43-CLIVIH'>Mar 27 Climate Report</a>: High: 81 Low: 48 Precip: 0.0\" Snow: Missing</body>"
+        },
+        {
+            "seqnum": 43437800,
+            "ts": "2025-03-27 22:20:33",
+            "author": "iembot",
+            "product_id": "202503272219-KSGF-CDUS43-CLISGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>SPRINGFIELD MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503272219-KSGF-CDUS43-CLISGF'>Mar 27 Climate Report</a>: High: 81 Low: 53 Precip: 0.0\" Snow: 0.0\" Snow Depth: 0\"</body>"
+        },
+        {
+            "seqnum": 43437802,
+            "ts": "2025-03-27 22:20:33",
+            "author": "iembot",
+            "product_id": "202503272219-KSGF-CDUS43-CLIJLN",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>JOPLIN MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503272219-KSGF-CDUS43-CLIJLN'>Mar 27 Climate Report</a>: High: 81 Low: 55 Precip: 0.0\" Snow: Missing</body>"
+        },
+        {
+            "seqnum": 43439822,
+            "ts": "2025-03-27 23:48:27",
+            "author": "iembot",
+            "product_id": "202503272348-KSGF-FXUS63-AFDSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503272348-KSGF-FXUS63-AFDSGF'>Area Forecast Discussion (AFD)</a> at Mar 27, 6:48 PM CDT</p></body>"
+        },
+        {
+            "seqnum": 43441295,
+            "ts": "2025-03-28 01:30:25",
+            "author": "iembot",
+            "product_id": "202503280130-KSGF-FLUS43-HWOSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503280130-KSGF-FLUS43-HWOSGF'>Hazardous Weather Outlook (HWO)</a> at Mar 27, 8:30 PM CDT</p></body>"
+        },
+        {
+            "seqnum": 43444328,
+            "ts": "2025-03-28 05:41:52",
+            "author": "iembot",
+            "product_id": "202503280541-KSGF-FXUS63-AFDSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503280541-KSGF-FXUS63-AFDSGF'>Area Forecast Discussion (AFD)</a> at Mar 28, 12:41 AM CDT</p></body>"
+        },
+        {
+            "seqnum": 43444726,
+            "ts": "2025-03-28 06:10:18",
+            "author": "iembot",
+            "product_id": "202503280605-KWNS-WUUS02-PTSDY2",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>The Storm Prediction Center issues <a href='https://www.spc.noaa.gov/products/outlook/archive/2025/day2otlk_20250328_0700.html'>Day 2 Slight Convective Risk</a> at Mar 28, 6:05z for portions of SGF's area</p></body>"
+        },
+        {
+            "seqnum": 43444765,
+            "ts": "2025-03-28 06:13:28",
+            "author": "iembot",
+            "product_id": "202503280613-KSGF-FNUS63-RFDSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503280613-KSGF-FNUS63-RFDSGF'>Grassland Fire Danger (RFD)</a> at Mar 28, 1:13 AM CDT</p></body>"
+        },
+        {
+            "seqnum": 43445077,
+            "ts": "2025-03-28 06:35:15",
+            "author": "iembot",
+            "product_id": "202503280633-KSGF-CDUS43-CLISGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>SPRINGFIELD MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503280633-KSGF-CDUS43-CLISGF'>Mar 27 Climate Report</a>: High: 81 Low: 53 Precip: 0.0\" Snow: 0.0\" Snow Depth: 0\"</body>"
+        },
+        {
+            "seqnum": 43445079,
+            "ts": "2025-03-28 06:35:15",
+            "author": "iembot",
+            "product_id": "202503280633-KSGF-CDUS43-CLIJLN",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>JOPLIN MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503280633-KSGF-CDUS43-CLIJLN'>Mar 27 Climate Report</a>: High: 81 Low: 55 Precip: 0.0\" Snow: Missing</body>"
+        },
+        {
+            "seqnum": 43445081,
+            "ts": "2025-03-28 06:35:16",
+            "author": "iembot",
+            "product_id": "202503280633-KSGF-CDUS43-CLIVIH",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>VICHY-ROLLA MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503280633-KSGF-CDUS43-CLIVIH'>Mar 27 Climate Report</a>: High: 81 Low: 48 Precip: 0.0\" Snow: Missing</body>"
+        },
+        {
+            "seqnum": 43445083,
+            "ts": "2025-03-28 06:35:16",
+            "author": "iembot",
+            "product_id": "202503280633-KSGF-CDUS43-CLIUNO",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>WEST PLAINS MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503280633-KSGF-CDUS43-CLIUNO'>Mar 27 Climate Report</a>: High: 82 Low: 48 Precip: 0.0\" Snow: Missing</body>"
+        },
+        {
+            "seqnum": 43446220,
+            "ts": "2025-03-28 07:42:59",
+            "author": "iembot",
+            "product_id": "202503280740-KWNS-WUUS03-PTSDY3",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>The Storm Prediction Center issues <a href='https://www.spc.noaa.gov/products/outlook/archive/2025/day3otlk_20250328_0730.html'>Day 3 Enhanced Convective Risk</a> at Mar 28, 7:40z for portions of SGF's area</p></body>"
+        },
+        {
+            "seqnum": 43446636,
+            "ts": "2025-03-28 08:00:46",
+            "author": "iembot",
+            "product_id": "202503280800-KSGF-FXUS63-AFDSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503280800-KSGF-FXUS63-AFDSGF'>Area Forecast Discussion (AFD)</a> at Mar 28, 3:00 AM CDT</p></body>"
+        },
+        {
+            "seqnum": 43447805,
+            "ts": "2025-03-28 09:04:58",
+            "author": "iembot",
+            "product_id": "202503280900-KWNS-WUUS48-PTSD48",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>The Storm Prediction Center issues <a href='https://www.spc.noaa.gov/products/exper/day4-8/archive/2025/day4-8_20250328.html'>Day 6 15% Any Severe Convective Risk</a> at Mar 28, 9:00z for portions of SGF's area</p></body>"
+        },
+        {
+            "seqnum": 43448316,
+            "ts": "2025-03-28 09:11:37",
+            "author": "iembot",
+            "product_id": "202503280909-KWNS-WUUS48-PTSD48",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>The Storm Prediction Center issues <a href='https://www.spc.noaa.gov/products/exper/day4-8/archive/2025/day4-8_20250328.html'>Day 6 15% Any Severe Convective Risk</a> at Mar 28, 9:09z for portions of SGF's area</p></body>"
+        },
+        {
+            "seqnum": 43448842,
+            "ts": "2025-03-28 10:01:09",
+            "author": "iembot",
+            "product_id": "202503281000-KSGF-FLUS43-HWOSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503281000-KSGF-FLUS43-HWOSGF'>Hazardous Weather Outlook (HWO)</a> at Mar 28, 5:00 AM CDT</p></body>"
+        },
+        {
+            "seqnum": 43449172,
+            "ts": "2025-03-28 10:41:16",
+            "author": "iembot",
+            "product_id": "202503281041-KSGF-FXUS63-AFDSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503281041-KSGF-FXUS63-AFDSGF'>Area Forecast Discussion (AFD)</a> at Mar 28, 5:41 AM CDT</p></body>"
+        },
+        {
+            "seqnum": 43450801,
+            "ts": "2025-03-28 11:56:53",
+            "author": "iembot",
+            "product_id": "",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>The Weather Prediction Center issues <a href='https://www.wpc.ncep.noaa.gov/qpf/excessive_rainfall_outlook_ero.php'>Day 3 Marginal Risk Excessive Rainfall Outlook</a> at Mar 28, 8:10z for portions of SGF's area</p></body>"
+        },
+        {
+            "seqnum": 43456355,
+            "ts": "2025-03-28 17:30:54",
+            "author": "iembot",
+            "product_id": "202503281727-KWNS-WUUS02-PTSDY2",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>The Storm Prediction Center issues <a href='https://www.spc.noaa.gov/products/outlook/archive/2025/day2otlk_20250328_1730.html'>Day 2 Slight Convective Risk</a> at Mar 28, 17:27z for portions of SGF's area</p></body>"
+        },
+        {
+            "seqnum": 43456546,
+            "ts": "2025-03-28 17:35:14",
+            "author": "iembot",
+            "product_id": "202503281735-KSGF-FXUS63-AFDSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503281735-KSGF-FXUS63-AFDSGF'>Area Forecast Discussion (AFD)</a> at Mar 28, 12:35 PM CDT</p></body>"
+        },
+        {
+            "seqnum": 43459064,
+            "ts": "2025-03-28 19:34:44",
+            "author": "iembot",
+            "product_id": "202503281931-KWNS-WUUS03-PTSDY3",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>The Storm Prediction Center issues <a href='https://www.spc.noaa.gov/products/outlook/archive/2025/day3otlk_20250328_1930.html'>Day 3 Enhanced Convective Risk</a> at Mar 28, 19:31z for portions of SGF's area</p></body>"
+        },
+        {
+            "seqnum": 43459357,
+            "ts": "2025-03-28 19:36:50",
+            "author": "iembot",
+            "product_id": "",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>The Weather Prediction Center issues <a href='https://www.wpc.ncep.noaa.gov/qpf/excessive_rainfall_outlook_ero.php'>Day 3 Marginal Risk Excessive Rainfall Outlook</a> at Mar 28, 19:10z for portions of SGF's area</p></body>"
+        },
+        {
+            "seqnum": 43460348,
+            "ts": "2025-03-28 20:27:57",
+            "author": "iembot",
+            "product_id": "202503282027-KSGF-FXUS63-AFDSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503282027-KSGF-FXUS63-AFDSGF'>Area Forecast Discussion (AFD)</a> at Mar 28, 3:27 PM CDT</p></body>"
+        },
+        {
+            "seqnum": 43460451,
+            "ts": "2025-03-28 20:31:31",
+            "author": "iembot",
+            "product_id": "202503282031-KSGF-FNUS63-RFDSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503282031-KSGF-FNUS63-RFDSGF'>Grassland Fire Danger (RFD)</a> at Mar 28, 3:31 PM CDT</p></body>"
+        },
+        {
+            "seqnum": 43460496,
+            "ts": "2025-03-28 20:34:48",
+            "author": "iembot",
+            "product_id": "202503282034-KSGF-FLUS43-HWOSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503282034-KSGF-FLUS43-HWOSGF'>Hazardous Weather Outlook (HWO)</a> at Mar 28, 3:34 PM CDT</p></body>"
+        },
+        {
+            "seqnum": 43461508,
+            "ts": "2025-03-28 21:17:20",
+            "author": "iembot",
+            "product_id": "202503282115-KSGF-CDUS43-CLIVIH",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>VICHY-ROLLA MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503282115-KSGF-CDUS43-CLIVIH'>Mar 28 Climate Report</a>: High: 78 Low: 62 Precip: 0.0\" Snow: Missing</body>"
+        },
+        {
+            "seqnum": 43461518,
+            "ts": "2025-03-28 21:17:24",
+            "author": "iembot",
+            "product_id": "202503282115-KSGF-CDUS43-CLIJLN",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>JOPLIN MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503282115-KSGF-CDUS43-CLIJLN'>Mar 28 Climate Report</a>: High: 72 Low: 56 Precip: 0.0\" Snow: Missing</body>"
+        },
+        {
+            "seqnum": 43461520,
+            "ts": "2025-03-28 21:17:25",
+            "author": "iembot",
+            "product_id": "202503282115-KSGF-CDUS43-CLIUNO",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>WEST PLAINS MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503282115-KSGF-CDUS43-CLIUNO'>Mar 28 Climate Report</a>: High: 72 Low: 58 Precip: Trace Snow: Missing</body>"
+        },
+        {
+            "seqnum": 43461523,
+            "ts": "2025-03-28 21:17:26",
+            "author": "iembot",
+            "product_id": "202503282115-KSGF-CDUS43-CLISGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>SPRINGFIELD MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503282115-KSGF-CDUS43-CLISGF'>Mar 28 Climate Report</a>: High: 69 Low: 53 Precip: Trace Snow: 0.0\" Snow Depth: 0\"</body>"
+        },
+        {
+            "seqnum": 43463053,
+            "ts": "2025-03-28 22:28:33",
+            "author": "iembot",
+            "product_id": "202503282227-KSGF-CDUS43-CLIUNO",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>WEST PLAINS MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503282227-KSGF-CDUS43-CLIUNO'>Mar 28 Climate Report</a>: High: 72 Low: 58 Precip: Trace Snow: Missing</body>"
+        },
+        {
+            "seqnum": 43463056,
+            "ts": "2025-03-28 22:28:33",
+            "author": "iembot",
+            "product_id": "202503282227-KSGF-CDUS43-CLISGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>SPRINGFIELD MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503282227-KSGF-CDUS43-CLISGF'>Mar 28 Climate Report</a>: High: 69 Low: 53 Precip: Trace Snow: 0.0\" Snow Depth: 0\"</body>"
+        },
+        {
+            "seqnum": 43463058,
+            "ts": "2025-03-28 22:28:33",
+            "author": "iembot",
+            "product_id": "202503282227-KSGF-CDUS43-CLIVIH",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>VICHY-ROLLA MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503282227-KSGF-CDUS43-CLIVIH'>Mar 28 Climate Report</a>: High: 78 Low: 62 Precip: 0.0\" Snow: Missing</body>"
+        },
+        {
+            "seqnum": 43463060,
+            "ts": "2025-03-28 22:28:34",
+            "author": "iembot",
+            "product_id": "202503282227-KSGF-CDUS43-CLIJLN",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'>JOPLIN MO <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503282227-KSGF-CDUS43-CLIJLN'>Mar 28 Climate Report</a>: High: 72 Low: 56 Precip: 0.0\" Snow: Missing</body>"
+        },
+        {
+            "seqnum": 43463740,
+            "ts": "2025-03-28 23:08:13",
+            "author": "iembot",
+            "product_id": "202503282307-KSGF-FXUS63-AFDSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503282307-KSGF-FXUS63-AFDSGF'>Area Forecast Discussion (AFD)</a> at Mar 28, 6:07 PM CDT</p></body>"
+        },
+        {
+            "seqnum": 43466826,
+            "ts": "2025-03-29 01:22:32",
+            "author": "iembot",
+            "product_id": "202503290121-KSGF-FLUS43-HWOSGF",
+            "message": "<body xmlns='http://www.w3.org/1999/xhtml'><p>SGF issues <a href='https://mesonet.agron.iastate.edu/p.php?pid=202503290121-KSGF-FLUS43-HWOSGF'>Hazardous Weather Outlook (HWO)</a> at Mar 28, 8:21 PM CDT</p></body>"
+        }
+    ]
+}
