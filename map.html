@@ -2,115 +2,1358 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Active Warnings Map</title>
+    <title>Weather Camera Map</title>
     <link
       rel="icon"
       type="image/x-icon"
       href="https://cdn.glitch.global/10289291-dda7-497d-a43c-f017e0457b15/image_2023-12-16_172444899.png?v=1739490392300"
     />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        text-align: center;
-        padding: 20px;
-        background-color: #ffffff;
-        color: #000000;
-        transition: background-color 0.3s, color 0.3s;
-      }
-      body.dark {
-        background-color: #1c1c1c;
-        color: #ffffff;
-      }
-      .map-container {
-        width: 100%;
-        height: 650px;
-        margin-top: 20px;
-        filter: brightness(1);
-      }
-      button {
-        margin: 10px;
-        padding: 10px;
-      }
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+  <style>
+    body {
+      margin: 0;
+      background-color: #121212;
+      color: #f0f0f0;
+      font-family: Arial, sans-serif;
+    }
+    #controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1em;
+      padding: 1em;
+      background: #1e1e1e;
+    }
+    select {
+      background: #333;
+      color: #fff;
+      border: none;
+      padding: 0.5em;
+    }
+    #map {
+      width: 100%;
+      height: 100vh;
+    }
+    .camera-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 1em;
+      gap: 1em;
+      background-color: #121212;
+    }
+    .camera-box {
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+      padding: 1em;
+      border-radius: 8px;
+      width: 320px;
+      text-align: center;
+      box-shadow: 0 0 8px rgba(0,0,0,0.6);
+    }
+    .camera-box img, .camera-box video {
+      max-width: 100%;
+      border-radius: 4px;
+      margin-top: 0.5em;
+      cursor: pointer;
+    }
+    .camera-name {
+      font-weight: bold;
+      font-size: 1.1em;
+      margin-bottom: 0.5em;
+    }
+    .coords {
+      font-size: 0.9em;
+      color: #aaa;
+    }
+    .timestamp {
+      font-size: 0.8em;
+      color: #ccc;
+      margin-top: 0.5em;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal img, .modal video {
+      max-width: 90%;
+      max-height: 90%;
+    }
       @keyframes pulse {
-        0% {
-          stroke-width: 2px;
-        }
-        50% {
-          stroke-width: 6px;
-        }
-        100% {
-          stroke-width: 2px;
-        }
-      }
+      0% { stroke-width: 2px; }
+      50% { stroke-width: 6px; }
+      100% { stroke-width: 2px; }
+    }
+    .emergency {
+      animation: pulse 1.5s infinite;
+      stroke: #ff69b4 !important;
+    }
+    .destructive {
+      animation: pulse 1s infinite;
+      stroke: #ffb833 !important;
+    }
 
-      .emergency {
-        animation: pulse 1.5s infinite;
-        stroke: #ff69b4 !important;
-      }
+  </style>
+</head>
+<body>
 
-      .destructive {
-        animation: pulse 1s infinite;
-        stroke: #ffb833 !important;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Active Warnings Map</h1>
-    <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
-    <a href="index.html"><button>Home</button></a>
-    <div id="map" class="map-container"></div>
-    <script>
-      let map = L.map("map").setView([39.8283, -98.5795], 4);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "© OpenStreetMap contributors",
-      }).addTo(map);
+<div id="controls">
+  <button id="homeBtn" style="background:#333;color:#fff;border:none;padding:0.5em 1em;border-radius:4px;cursor:pointer;font-weight:bold;margin-right:1em;">
+    Home
+  </button>
+  <label>Route:
+    <select id="routeFilter">
+      <option value="all">All</option>
+      <option value="I40">I-40</option>
+      <option value="I49">I-49</option>
+      <option value="I540">I-540</option>
+      <option value="US65">US-65</option>
+      <option value="US412">US-412</option>
+    </select>
+  </label>
+  <label>State:
+    <select id="stateFilter">
+      <option value="all">All</option>
+      <option value="Arkansas">Arkansas</option>
+      <option value="Oklahoma">Oklahoma</option>
+      <option value="Missouri">Missouri</option>
+    </select>
+  </label>
+  <label>State Region:
+    <select id="regionFilter">
+      <option value="all">All</option>
+      <option value="northern">Northern</option>
+      <option value="central">Central</option>
+      <option value="southern">Southern</option>
+    </select>
+  </label>
+    <label>Network:
+    <select id="networkFilter">
+      <option value="all">All</option>
+      <option value="DOT">DOT</option>
+      <option value="weatherbug">WeatherBug</option>
+    </select>
+  </label>
+</div>
 
-      let radarLayer = L.tileLayer
-        .wms("https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q.cgi?", {
-          layers: "nexrad-n0q-900913",
-          format: "image/png",
-          transparent: true,
-          attribution: "Iowa Environmental Mesonet",
-        })
-        .addTo(map);
+<div id="map"></div>
+<div class="camera-grid" id="cameraGrid"></div>
+<div class="modal" id="modal" onclick="this.style.display='none';"></div>
 
-      function refreshRadarLayer() {
-        map.removeLayer(radarLayer);
-        radarLayer = L.tileLayer
-          .wms(
-            "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q.cgi?",
-            {
-              layers: "nexrad-n0q-900913",
-              format: "image/png",
-              transparent: true,
-              attribution: "Iowa Environmental Mesonet",
-            }
-          )
-          .addTo(map);
-      }
-      let lastUpdateTime = null;
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+<script>
+const cameras = [
+  // I-49 IN ARKANSAS
+    {
+        id: 747,
+        coords: [36.49948, -94.38270],
+        name: "I-49 @ MM 105 (Missouri State Line)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 746,
+        coords: [36.46498, -94.37876],
+        name: "I-49 @ MM 102 (Highlands Blvd)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 'cooperems',
+        coords: [36.43722, -94.23033],
+        name: "Cooper Elementary School",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/BLCHS/BLCHS_l.jpg"
+    },
+    {
+        id: 'pearidgehs',
+        coords: [36.45414, -94.13423],
+        name: "Pea Ridge High School",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/SLMBN/SLMBN_l.jpg"
+    },
+    {
+        id: 745,
+        coords: [36.43240, -94.36930],
+        name: "I-49 @ MM 100 (Gravette)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 744,
+        coords: [36.42312, -94.32035],
+        name: "I-49 @ MM 97 (Centerton)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 743,
+        coords: [36.41636, -94.23245],
+        name: "I-49 @ MM 92.1 (Bella Vista Bypass)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 337,
+        coords: [36.41247, -94.21323],
+        name: "I-49 @ MM 91.1 (Bella Vista Bypass)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 343,
+        coords: [36.40440, -94.19831],
+        name: "I-49 @ MM 90.1 (Slaughter Pen Rd)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 338,
+        coords: [36.40079, -94.18663],
+        name: "I-49 @ MM 89.4 (J St)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 339,
+        coords: [36.39930, -94.18465],
+        name: "I-49 @ MM 89.2 (South of J St)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 340,
+        coords: [36.39330, -94.18363],
+        name: "I-49 @ MM 88.9 (Little Flock)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 341,
+        coords: [36.38907, -94.18355],
+        name: "I-49 @ MM 88.4 (Tiger Blvd)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 342,
+        coords: [36.38157, -94.17540],
+        name: "I-49 @ MM 87.8 (Central Ave)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 344,
+        coords: [36.37441, -94.16891],
+        name: "I-49 @ MM 87.2 (Regen Hut Rd)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 345,
+        coords: [36.37071, -94.17003],
+        name: "I-49 @ MM 86.9 (Battlefield Blvd)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 'bvillesquare',
+        coords: [36.37283, -94.20892],
+        name: "Bentonville Square",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/BENAK/BENAK_l.jpg"
+    },
+    {
+        id: 346,
+        coords: [36.36378, -94.17568],
+        name: "I-49 @ MM 86.3 (8th St)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 366,
+        coords: [36.35635, -94.17822],
+        name: "I-49 @ MM 85.9 (SE 14th St)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 'decaturwatertreat',
+        coords: [36.34348, -94.46913],
+        name: "Decatur Waste Water Department",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/DCTRA/DCTRA_l.jpg"
+    },
+    {
+        id: 347,
+        coords: [36.33504, -94.18347],
+        name: "I-49 @ MM 84.3 (Walton Blvd)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 'fulbrightjhs',
+        coords: [36.32023, -94.23512],
+        name: "Fulbright Junior High School",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/BNTAR/BNTAR_l.jpg"
+    },
+    {
+        id: 348,
+        coords: [36.31477, -94.18513],
+        name: "I-49 @ MM 82.9 (New Hope Rd)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 349,
+        coords: [36.30617, -94.18424],
+        name: "I-49 @ MM 82.5 (Embassy Suites)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 'embassy',
+        coords: [36.30598, -94.18603],
+        name: "Embassy Suites Rogers",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/KNWAR/KNWAR_l.jpg"
+    },
+    {
+        id: 350,
+        coords: [36.30010, -94.17915],
+        name: "I-49 @ MM 81.8 (Pauline Whitaker)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 351,
+        coords: [36.29427, -94.16492],
+        name: "I-49 @ MM 80.9 (Ajax Ave)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 372,
+        coords: [36.28342, -94.15665],
+        name: "I-49 @ MM 80 (Pleasant Grove Rd)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 364,
+        coords: [36.26534, -94.15025],
+        name: "I-49 @ MM 78.7 (Oakwood Ave)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 45,
+        coords: [36.25906, -94.15037],
+        name: "I-49 @ MM 78.3",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 363,
+        coords: [36.25443, -94.15043],
+        name: "I-49 @ MM 77.9 (Monroe Ave)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 362,
+        coords: [36.24046, -94.15515],
+        name: "I-49 @ MM 76.8 (AR 612)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 253,
+        coords: [36.23748, -94.16075],
+        name: "I-49 @ MM 76.5",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 361,
+        coords: [36.23350, -94.17062],
+        name: "I-49 @ MM 75.9 (Puppy Creek)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 360,
+        coords: [36.22602, -94.17900],
+        name: "I-49 @ MM 75.2 (Wagon Wheel Rd)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 174,
+        coords: [36.22087, -94.18048],
+        name: "I-49 @ MM 74.9",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 352,
+        coords: [36.21028, -94.18210],
+        name: "I-49 @ MM 74.1",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 335,
+        coords: [36.20065, -94.18185],
+        name: "I-49 @ MM 73.4 (Falcon Rd)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 334,
+        coords: [36.19332, -94.17988],
+        name: "I-49 @ MM 72.9 (Elm Springs Rd)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 333,
+        coords: [36.18547, -94.17894],
+        name: "I-49 @ MM 72.2",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 332,
+        coords: [36.17534, -94.18604],
+        name: "I-49 @ MM 71.5 (Sunset Ave)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 'harberhs',
+        coords: [36.18348, -94.21424],
+        name: "Har-Ber High School",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/SPDLE/SPDLE_l.jpg"
+    },
+    // US 412 IN ARKANSAS
+    {
+        id: 166,
+        coords: [36.17642, -94.56203],
+        name: "US-412 @ Welcome Center",
+        state: "Arkansas",
+        region: "northern",
+        route: "US412",
+        type: "image"
+    },
+    {
+        id: 'allenems',
+        coords: [36.19887, -94.54368],
+        name: "Allen Elementary School",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/SLMBN/SLMBN_l.jpg"
+    },
+    {
+        id: 545,
+        coords: [36.17309, -94.36613],
+        name: "US-412 @ Illinois River",
+        state: "Arkansas",
+        region: "northern",
+        route: "US412",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 521,
+        coords: [36.17135, -94.01966],
+        name: "US-412 @ Beaver Lake",
+        state: "Arkansas",
+        region: "northern",
+        route: "US412",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 'huntsmiddle',
+        coords: [36.08641, -93.74367],
+        name: "Huntsville Middle School",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/HNTMD/HNTMD_l.jpg"
+    },
+    // CONT. I49 IN ARKANSAS
+    {
+        id: 331,
+        coords: [36.16095, -94.18665],
+        name: "I-49 @ MM 70.5 (Watkins Ave)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 'archildrensnw',
+        coords: [36.16216, -94.19076],
+        name: "Arkansas Children's Northwest",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/ACNAR/ACNAR_l.jpg"
+    },
+    {
+        id: 330,
+        coords: [36.15388, -94.18647],
+        name: "I-49 @ MM 70 (Don Tyson Blvd)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 329,
+        coords: [36.13847, -94.18280],
+        name: "I-49 @ MM 69 (Johnson Mill Blvd)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 328,
+        coords: [36.12783, -94.18093],
+        name: "I-49 @ MM 68.5",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 327,
+        coords: [36.12152, -94.17955],
+        name: "I-49 @ MM 67.8",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 326,
+        coords: [36.10998, -94.16989],
+        name: "I-49 @ MM 66.7",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 735,
+        coords: [36.10807, -94.17443],
+        name: "I-49 @ MM 66.3 (Fulbright Expwy)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 325,
+        coords: [36.10570, -94.17980],
+        name: "I-49 @ MM 66 (Garland Ave)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 324,
+        coords: [36.09698, -94.18737],
+        name: "I-49 @ MM 65.2",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 323,
+        coords: [36.09023, -94.19281],
+        name: "I-49 @ MM 64.7 (Stephen Carr Blvd)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 322,
+        coords: [36.07824, -94.20069],
+        name: "I-49 @ MM 63.7 (Wedington Dr)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 'graduatefay',
+        coords: [36.06353, -94.15946],
+        name: "Graduate Hotel Fayetteville",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/FYTHC/FYTHC_l.jpg"
+    },
+    {
+        id: 'mtsequoia',
+        coords: [36.06480, -94.13848],
+        name: "Mount Sequoia",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/KNWAH/KNWAH_l.jpg"
+    },
+    {
+        id: 321,
+        coords: [36.06930, -94.20260],
+        name: "I-49 @ MM 63.1",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 319,
+        coords: [36.04544, -94.19089],
+        name: "I-49 @ MM 61.3",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 318,
+        coords: [36.03690, -94.18890],
+        name: "I-49 @ MM 60.7",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 317,
+        coords: [36.01629, -94.19418],
+        name: "I-49 @ MM 59.4",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 'kesslermtn',
+        coords: [36.01807, -94.21910],
+        name: "Kessler Mountain",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/FYTAR/FYTAR_l.jpg"
+    },
+    {
+        id: 734,
+        coords: [35.99692, -94.19623],
+        name: "I-49 @ MM 58 (Greenland)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 'pgtelco',
+        coords: [35.97330, -94.33263],
+        name: "PG Telco Tower",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/LNCAR/LNCAR_s.jpg"
+    },
+    {
+        id: 739,
+        coords: [35.87289, -94.17622],
+        name: "I-49 @ MM 49",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 733,
+        coords: [35.81909, -94.19145],
+        name: "I-49 @ MM 45 (AR 74)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 10,
+        coords: [35.80842, -94.18883],
+        name: "I-49 @ MM 44.1",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 304,
+        coords: [35.76785, -94.18927],
+        name: "I-49 @ MM 41.2 (Bobby Hopper Tun.)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 165,
+        coords: [35.73169, -94.19831],
+        name: "I-49 @ MM 39",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 739,
+        coords: [35.70928, -94.19824],
+        name: "I-49 @ MM 37",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 'cartwrightmt',
+        coords: [35.71004, -94.13754],
+        name: "Cartwright Mountain",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/MNTNB/MNTNB_l.jpg"
+    },
+    {
+        id: 731,
+        coords: [35.67103, -94.16512],
+        name: "I-49 @ MM 33.7 (Chester)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 730,
+        coords: [35.61298, -94.19080],
+        name: "I-49 @ MM 29.3 (Mountainburg)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 729,
+        coords: [35.58263, -94.21640],
+        name: "I-49 @ MM 26.7",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 'kisrfm',
+        coords: [35.52518, -94.37447],
+        name: "KISR-FM Tower",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/KISRM/KISRM_l.jpg"
+    },
+    {
+        id: 736,
+        coords: [35.51372, -94.23812],
+        name: "I-49 @ MM 22",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 'almainter',
+        coords: [35.49353, -94.24016],
+        name: "Alma Intermediate School",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/ALMIN/ALMIN_l.jpg"
+    },
+    {
+        id: 728,
+        coords: [35.49208, -94.24475],
+        name: "I-49 @ MM 20 (Collum Ln)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 738,
+        coords: [35.48653, -94.24360],
+        name: "I-49 @ MM 19.5",
+        state: "Arkansas",
+        region: "northern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 424,
+        coords: [33.40167, -94.00700],
+        name: "I-49 @ MM 30",
+        state: "Arkansas",
+        region: "southern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 164,
+        coords: [33.38731, -94.01917],
+        name: "I-49 @ MM 29 (AR 151)",
+        state: "Arkansas",
+        region: "southern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 423,
+        coords: [33.33944, -93.97136],
+        name: "I-49 @ MM 24",
+        state: "Arkansas",
+        region: "southern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 484,
+        coords: [33.08212, -93.89805],
+        name: "I-49 @ MM 4",
+        state: "Arkansas",
+        region: "southern",
+        route: "I49",
+        type: "image",
+        network: "DOT"
+    },
+    // I 540 IN ARKANSAS
+    {
+        id: 526,
+        coords: [35.45340, -94.32077],
+        name: "I-540 @ MM 14.6",
+        state: "Arkansas",
+        region: "northern",
+        route: "I540",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 453,
+        coords: [35.44705, -94.32038],
+        name: "I-540 @ MM 14.1 (US 64)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I540",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 524,
+        coords: [35.42561, -94.34339],
+        name: "I-540 @ MM 11.9 (4th ST)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I540",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 458,
+        coords: [35.41941, -94.35196],
+        name: "I-540 @ MM 11.2 (Arkansas River)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I540",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 534,
+        coords: [35.40347, -94.36638],
+        name: "I-540 @ MM 9.8 (Kelly Highway)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I540",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 'lauras',
+        coords: [35.39208, -94.42919],
+        name: "Miss Laura's Museum",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/FTSMA/FTSMA_l.jpg"
+    },
+    {
+        id: 527,
+        coords: [35.38507, -94.36417],
+        name: "I-540 @ MM 8.5 (Grand Ave)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I540",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 'ftsmithpublic',
+        coords: [35.37428, -94.39657],
+        name: "Ft. Smith Public Library",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/FTSPL/FTSPL_l.jpg"
+    },
+    {
+        id: 454,
+        coords: [35.35932, -94.36502],
+        name: "I-540 @ MM 6.7 (Rogers Ave)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I540",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 525,
+        coords: [35.34049, -94.38022],
+        name: "I-540 @ MM 5.1 (Ft. Smith Airport)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I540",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 535,
+        coords: [35.33706, -94.39115],
+        name: "I-540 @ MM 4.4 (Old Greenwood Rd)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I540",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 536,
+        coords: [35.33044, -94.39451],
+        name: "I-540 @ MM 3.9 (Zero St)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I540",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 528,
+        coords: [35.31231, -94.39913],
+        name: "I-540 @ MM 2.6 (US 71/71B)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I540",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 537,
+        coords: [35.30295, -94.41016],
+        name: "I-540 @ MM 1.7 (Jenny Lind Rd)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I540",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 538,
+        coords: [35.29349, -94.42318],
+        name: "I-540 @ MM 0.6 (US 271)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I540",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 529,
+        coords: [35.29201, -94.43484],
+        name: "I-540 @ Oklahoma State Line",
+        state: "Arkansas",
+        region: "northern",
+        route: "I540",
+        type: "image",
+        network: "DOT"
+    },
+    // I 40 IN ARKANSAS
+    {
+        id: 452,
+        coords: [35.45196, -94.44078],
+        name: "I-40 @ Oklahoma State Line",
+        state: "Arkansas",
+        region: "northern",
+        route: "I40",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 218,
+        coords: [35.46019, -94.40120],
+        name: "I-40 @ MM 2.6 (Welcome Center)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I40",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 513,
+        coords: [35.45965, -94.39200],
+        name: "I-40 @ MM 3.1 (Lee Creek Rd)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I40",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 523,
+        coords: [35.46265, -94.35574],
+        name: "I-40 @ MM 5.3 (AR 59)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I40",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 217,
+        coords: [35.45599, -94.32395],
+        name: "I-40 @ MM 7.1",
+        state: "Arkansas",
+        region: "northern",
+        route: "I40",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 514,
+        coords: [35.45635, -94.31229],
+        name: "I-40 @ MM 7.9",
+        state: "Arkansas",
+        region: "northern",
+        route: "I40",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 219,
+        coords: [35.46168, -94.28986],
+        name: "I-40 @ MM 8.9",
+        state: "Arkansas",
+        region: "northern",
+        route: "I40",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 517,
+        coords: [35.47894, -94.24814],
+        name: "I-40 @ MM 11.8",
+        state: "Arkansas",
+        region: "northern",
+        route: "I40",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 737,
+        coords: [35.48297, -94.24175],
+        name: "I-40 @ MM 12.3 (I-49)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I40",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 515,
+        coords: [35.48907, -94.22579],
+        name: "I-40 @ MM 13.3 (US 71B)",
+        state: "Arkansas",
+        region: "northern",
+        route: "I40",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 445,
+        coords: [35.49074, -94.21717],
+        name: "I-40 @ MM 13.8",
+        state: "Arkansas",
+        region: "northern",
+        route: "I40",
+        type: "image",
+        network: "DOT"
+    },
+    // US 65 IN ARKANSAS
+    {
+        id: 167,
+        coords: [36.46515, -93.21920],
+        name: "US-65 @ Cricket Creek",
+        state: "Arkansas",
+        region: "northern",
+        route: "US65",
+        type: "image",
+        network: "DOT"
+    },
+    {
+        id: 'booneema',
+        coords: [36.23291, -93.10273],
+        name: "Boone County EMA",
+        state: "Arkansas",
+        region: "northern",
+        route: "none",
+        type: "image",
+        network: "weatherbug",
+        src: "https://instacam.earthnetworks.com/instacamimg/BCHRN/BCHRN_l.jpg"
+    },
+    {
+        id: 169,
+        coords: [35.78835, -92.53925],
+        name: "US-65 @ Peyton Creek",
+        state: "Arkansas",
+        region: "northern",
+        route: "US65",
+        type: "image",
+        network: "DOT"
+    },
+  ];
 
-      async function conditionalRefreshRadarLayer() {
-        const response = await fetch(
-          "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q.cgi?"
-        );
-        const currentUpdateTime = response.headers.get("Last-Modified");
+  let lastUpdated = new Date();
 
-        if (currentUpdateTime && currentUpdateTime !== lastUpdateTime) {
-          lastUpdateTime = currentUpdateTime;
-          refreshRadarLayer();
-        }
-      }
-
-      setInterval(conditionalRefreshRadarLayer, 60000); // Check every 60 seconds
-
-      function toggleDarkMode() {
-        document.body.classList.toggle("dark");
-      }
-
-      const warningColors = {
+  const warningColors = {
         "Tsunami Warning": "#FD6347",
         "Tornado Warning": "#FF0000",
         "Extreme Wind Warning": "#FF8C00",
@@ -220,149 +1463,290 @@
         "Short Term Forecast": "#98FB98",
         "Administrative Message": "#C0C0C0",
         Default: "#000000", // Default to black if no match
-      };
+};
 
-      async function fetchWarnings() {
-        try {
-          const response = await fetch("https://api.weather.gov/alerts/active");
-          const data = await response.json();
+let warningPolygons = [];
 
-          const now = new Date();
-          const uniqueWarnings = {};
+async function fetchWarnings() {
+  try {
+    const response = await fetch("https://api.weather.gov/alerts/active");
+    const data = await response.json();
 
-          const validWarnings = data.features.filter((warning) => {
-            const expires = new Date(warning.properties.expires);
-            const id = warning.id;
-            if (expires > now && !uniqueWarnings[id]) {
-              uniqueWarnings[id] = true;
-              return true;
-            }
-            return false;
-          });
+    const now = new Date();
+    const uniqueWarnings = {};
 
-          const emergencyWarnings = [];
-          const destructiveWarnings = [];
-          const regularWarnings = [];
-
-          validWarnings.forEach((warning) => {
-            if (
-              warning.properties.description.includes(
-                "FLASH FLOOD EMERGENCY"
-              ) ||
-              warning.properties.description.includes("TORNADO EMERGENCY")
-            ) {
-              emergencyWarnings.push(warning);
-            } else if (
-              warning.properties.description.includes("DESTRUCTIVE STORMS") ||
-              warning.properties.description.includes("DESTRUCTIVE STORM")
-            ) {
-              destructiveWarnings.push(warning);
-            } else {
-              regularWarnings.push(warning);
-            }
-          });
-
-          const sortedWarnings = [
-            ...regularWarnings.sort(
-              (a, b) =>
-                new Date(a.properties.sent) - new Date(b.properties.sent)
-            ),
-            ...destructiveWarnings,
-            ...emergencyWarnings,
-          ];
-
-          displayWarningsOnMap(
-            sortedWarnings,
-            emergencyWarnings,
-            destructiveWarnings
-          );
-        } catch (error) {
-          console.error("Error fetching warnings:", error);
-        }
+    const validWarnings = data.features.filter((warning) => {
+      const expires = new Date(warning.properties.expires);
+      const id = warning.id;
+      if (expires > now && !uniqueWarnings[id]) {
+        uniqueWarnings[id] = true;
+        return true;
       }
+      return false;
+    });
 
-      function displayWarningsOnMap(
-        warnings,
-        emergencyWarnings,
-        destructiveWarnings
+    const emergencyWarnings = [];
+    const destructiveWarnings = [];
+    const regularWarnings = [];
+
+    validWarnings.forEach((warning) => {
+      if (
+        warning.properties.description &&
+        (warning.properties.description.includes("FLASH FLOOD EMERGENCY") ||
+         warning.properties.description.includes("TORNADO EMERGENCY"))
       ) {
-        map.eachLayer((layer) => {
-          if (layer instanceof L.Polygon) {
-            map.removeLayer(layer);
-          }
-        });
+        emergencyWarnings.push(warning);
+      } else if (
+        warning.properties.description &&
+        (warning.properties.description.includes("DESTRUCTIVE STORMS") ||
+         warning.properties.description.includes("DESTRUCTIVE STORM"))
+      ) {
+        destructiveWarnings.push(warning);
+      } else {
+        regularWarnings.push(warning);
+      }
+    });
 
-        warnings.forEach((warning) => {
-          if (warning.geometry && warning.geometry.type === "Polygon") {
-            const coordinates = warning.geometry.coordinates[0].map((coord) => [
-              coord[1],
-              coord[0],
-            ]);
+    const sortedWarnings = [
+      ...regularWarnings.sort(
+        (a, b) => new Date(a.properties.sent) - new Date(b.properties.sent)
+      ),
+      ...destructiveWarnings,
+      ...emergencyWarnings,
+    ];
 
-            let color =
-              warningColors[warning.properties.event] || warningColors.Default;
-            let weight = 4;
-            let className = "";
+    displayWarningsOnMap(
+      sortedWarnings,
+      emergencyWarnings,
+      destructiveWarnings
+    );
+  } catch (error) {
+    console.error("Error fetching warnings:", error);
+  }
+}
 
-            if (emergencyWarnings.includes(warning)) {
-              color = "#FF69B4"; // Color for emergency warnings
-              weight = 6;
-              className = "emergency";
-            } else if (destructiveWarnings.includes(warning)) {
-              color = "#AB7800"; // Color for destructive warnings
-              weight = 6;
-              className = "destructive";
-            }
+function displayWarningsOnMap(
+  warnings,
+  emergencyWarnings,
+  destructiveWarnings
+) {
+  // Remove previous polygons only (not radar or markers)
+  warningPolygons.forEach(p => map.removeLayer(p));
+  warningPolygons = [];
 
-            const expires = new Date(warning.properties.expires);
-            function getTimeRemaining() {
-              const now = new Date();
-              const timeLeft = expires - now;
-              if (timeLeft <= 0) return "Expired";
-              const minutes = Math.floor((timeLeft / 1000 / 60) % 60);
-              const hours = Math.floor(timeLeft / 1000 / 60 / 60);
-              return `${hours}h ${minutes}m`;
-            }
+  warnings.forEach((warning) => {
+    if (warning.geometry && warning.geometry.type === "Polygon") {
+      const coordinates = warning.geometry.coordinates[0].map((coord) => [
+        coord[1],
+        coord[0],
+      ]);
 
-            const polygon = L.polygon(coordinates, {
-              color: color,
-              weight: weight,
-              opacity: 1,
-              fillOpacity: 0.45,
-              className: className,
-            })
-              .bindPopup(
-                () => `
-            <strong>Event:</strong> ${warning.properties.event}<br>
-            <strong>Sender:</strong> ${
-              warning.properties.senderName || "N/A"
-            }<br>
-            <strong>Area(s):</strong> ${
-              warning.properties.areaDesc || "N/A"
-            }<br>
-            <strong>Sent:</strong> ${new Date(
-              warning.properties.sent
-            ).toLocaleString()}<br>
-            <strong>Expires:</strong> ${new Date(
-              warning.properties.expires
-            ).toLocaleString()}<br>
-            <strong>Time Remaining:</strong> ${getTimeRemaining()}<br>
-          `
-              )
-              .addTo(map);
+      let color =
+        warningColors[warning.properties.event] || warningColors.Default;
+      let weight = 4;
+      let className = "";
 
-            if (
-              emergencyWarnings.includes(warning) ||
-              destructiveWarnings.includes(warning)
-            ) {
-              polygon.bringToFront();
-            }
-          }
-        });
+      if (emergencyWarnings.includes(warning)) {
+        color = "#FF69B4";
+        weight = 6;
+        className = "emergency";
+      } else if (destructiveWarnings.includes(warning)) {
+        color = "#AB7800";
+        weight = 6;
+        className = "destructive";
       }
 
-      fetchWarnings();
-      setInterval(fetchWarnings, 10000);
-    </script>
-  </body>
+      const expires = new Date(warning.properties.expires);
+      function getTimeRemaining() {
+        const now = new Date();
+        const timeLeft = expires - now;
+        if (timeLeft <= 0) return "Expired";
+        const minutes = Math.floor((timeLeft / 1000 / 60) % 60);
+        const hours = Math.floor(timeLeft / 1000 / 60 / 60);
+        return `${hours}h ${minutes}m`;
+      }
+
+      const polygon = L.polygon(coordinates, {
+        color: color,
+        weight: weight,
+        opacity: 1,
+        fillOpacity: 0.45,
+        className: className,
+      })
+        .bindPopup(
+          () => `
+        <strong>Event:</strong> ${warning.properties.event}<br>
+        <strong>Sender:</strong> ${warning.properties.senderName || "N/A"}<br>
+        <strong>Area(s):</strong> ${warning.properties.areaDesc || "N/A"}<br>
+        <strong>Sent:</strong> ${new Date(warning.properties.sent).toLocaleString()}<br>
+        <strong>Expires:</strong> ${new Date(warning.properties.expires).toLocaleString()}<br>
+        <strong>Time Remaining:</strong> ${getTimeRemaining()}<br>
+      `
+        )
+        .addTo(map);
+
+      warningPolygons.push(polygon);
+
+      // Bring to front if emergency/destructive
+      if (
+        emergencyWarnings.includes(warning) ||
+        destructiveWarnings.includes(warning)
+      ) {
+        polygon.bringToFront();
+      }
+    }
+  });
+
+  // Make sure camera markers are always on top
+  if (typeof markerCluster !== "undefined") {
+    markerCluster.bringToFront();
+  }
+  // Radar stays below warnings (already added first)
+}
+
+fetchWarnings();
+setInterval(fetchWarnings, 10000);
+
+const map = L.map('map').setView([36.3, -94.4], 7);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '© OpenStreetMap'
+}).addTo(map);
+
+let radarLayer = L.tileLayer
+  .wms("https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q.cgi?", {
+    layers: "nexrad-n0q-900913",
+    format: "image/png",
+    transparent: true,
+    attribution: "Iowa Environmental Mesonet",
+  })
+  .addTo(map);
+
+function refreshRadarLayer() {
+  map.removeLayer(radarLayer);
+  radarLayer = L.tileLayer
+    .wms(
+      "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q.cgi?",
+      {
+        layers: "nexrad-n0q-900913",
+        format: "image/png",
+        transparent: true,
+        attribution: "Iowa Environmental Mesonet",
+      }
+    )
+    .addTo(map);
+}
+
+let lastUpdateTime = null;
+
+async function conditionalRefreshRadarLayer() {
+  const response = await fetch(
+    "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q.cgi?"
+  );
+  const currentUpdateTime = response.headers.get("Last-Modified");
+
+  if (currentUpdateTime && currentUpdateTime !== lastUpdateTime) {
+    lastUpdateTime = currentUpdateTime;
+    refreshRadarLayer();
+  }
+}
+
+setInterval(conditionalRefreshRadarLayer, 60000); // Check every 60 seconds
+
+const cameraIcon = L.icon({
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/66/66843.png',
+  iconSize: [30, 30],
+  iconAnchor: [15, 30]
+});
+
+const markerCluster = L.markerClusterGroup();
+
+function getImageUrl(id) {
+  return `https://actis.idrivearkansas.com/index.php/api/cameras/image?camera=${id}&ts=${Date.now()}`;
+}
+
+function buildCameraBox(cam) {
+  const box = document.createElement('div');
+  box.className = 'camera-box';
+  box.setAttribute('data-state', cam.state);
+  box.setAttribute('data-route', cam.route);
+  let media;
+  if (cam.type === 'image') {
+    const src = cam.src || getImageUrl(cam.id);
+    media = `<img id="img-${cam.id}" src="${src}" alt="${cam.name}" onclick="showModal(this.src)">`;
+  } else {
+    media = `<video controls autoplay muted loop src="${cam.src}" onclick="event.stopPropagation(); showModalVideo(this.src)"></video>`;
+  }
+  box.innerHTML = `
+    <div class="camera-name">${cam.name}</div>
+    <div class="coords">${cam.coords.map(c => c.toFixed(5)).join(', ')}</div>
+    ${media}
+    <div class="timestamp" id="ts-${cam.id}">Updated: ${lastUpdated.toLocaleTimeString()}</div>
+  `;
+  return box;
+}
+
+function updateCameraGrid() {
+  const routeFilter = document.getElementById('routeFilter').value;
+  const stateFilter = document.getElementById('stateFilter').value;
+  const regionFilter = document.getElementById('regionFilter').value;
+  const networkFilter = document.getElementById('networkFilter').value;
+  const grid = document.getElementById('cameraGrid');
+  grid.innerHTML = '';
+  cameras.forEach(cam => {
+    if ((routeFilter === 'all' || cam.route === routeFilter) && (stateFilter === 'all' || cam.state === stateFilter) && (regionFilter === 'all' || cam.region === regionFilter) && (networkFilter === 'all' || cam.network === networkFilter)){
+      grid.appendChild(buildCameraBox(cam));
+    }
+  });
+}
+
+function showModal(src) {
+  const modal = document.getElementById('modal');
+  modal.innerHTML = `<img src="${src}">`;
+  modal.style.display = 'flex';
+}
+
+function showModalVideo(src) {
+  const modal = document.getElementById('modal');
+  modal.innerHTML = `<video src="${src}" controls autoplay style="max-width:90%; max-height:90%"></video>`;
+  modal.style.display = 'flex';
+}
+
+// Markers
+cameras.forEach(cam => {
+  const marker = L.marker(cam.coords, { icon: cameraIcon });
+  const src = cam.src || getImageUrl(cam.id);
+  const popupContent = cam.type === 'image'
+  ? `<strong>${cam.name}</strong><br><img src="${src}" width="300">`
+    : `<strong>${cam.name}</strong><br><video width="300" src="${cam.src}" autoplay muted loop></video>`;
+  marker.bindPopup(popupContent);
+  markerCluster.addLayer(marker);
+});
+map.addLayer(markerCluster);
+
+// Update images every 30s
+setInterval(() => {
+  lastUpdated = new Date();
+  cameras.forEach(cam => {
+    if (cam.type === 'image' && !cam.src) {
+      const img = document.getElementById(`img-${cam.id}`);
+      if (img) img.src = getImageUrl(cam.id);
+    }
+    const ts = document.getElementById(`ts-${cam.id}`);
+    if (ts) ts.textContent = `Updated: ${lastUpdated.toLocaleTimeString()}`;
+  });
+}, 30000);
+
+// Filters
+['routeFilter', 'stateFilter', 'regionFilter', 'networkFilter'].forEach(id => {
+  document.getElementById(id).addEventListener('change', updateCameraGrid);
+});
+
+updateCameraGrid();
+
+document.getElementById('homeBtn').addEventListener('click', function() {
+  window.location.href = 'index.html';
+});
+</script>
+</body>
 </html>
