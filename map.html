@@ -1,15 +1,9 @@
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="Cache-Control" content="no-cache">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Weather Camera Map</title>
-    <link
-      rel="icon"
-      type="image/x-icon"
-      href="https://cdn.glitch.global/10289291-dda7-497d-a43c-f017e0457b15/image_2023-12-16_172444899.png?v=1739490392300"
-    />
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<head>
+  <meta charset="UTF-8">
+  <title>Traffic Cameras Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
@@ -19,6 +13,14 @@
       background-color: #121212;
       color: #f0f0f0;
       font-family: Arial, sans-serif;
+    }
+    .section-title {
+      margin: 0;
+      padding: 1em 1em 0 1em;
+      font-size: 1.4em;
+      font-weight: bold;
+      color: #f0f0f0;
+      background-color: #1e1e1e;
     }
     #controls {
       display: flex;
@@ -107,7 +109,7 @@
   </style>
 </head>
 <body>
-
+<h2 class="section-title">Weather Alerts & Cameras Viewer</h2>
 <div id="controls">
   <button id="homeBtn" style="background:#333;color:#fff;border:none;padding:0.5em 1em;border-radius:4px;cursor:pointer;font-weight:bold;margin-right:1em;">
     Home
@@ -115,18 +117,30 @@
   <label>Route:
     <select id="routeFilter">
       <option value="all">All</option>
+      <option value="I10">I-10</option>
+      <option value="I30">I-30</option>
       <option value="I35">I-35</option>
       <option value="I40">I-40</option>
+      <option value="I45">I-45</option>
       <option value="I49">I-49</option>
       <option value="I55">I-55</option>
+      <option value="I57">I-57</option>
       <option value="I430">I-430</option>
+      <option value="I440">I-440</option>
+      <option value="I530">I-530</option>
       <option value="I540">I-540</option>
       <option value="I555">I-555</option>
       <option value="I630">I-630</option>
+      <option value="US1">US-1</option>
       <option value="US62">US-62</option>
       <option value="US63">US-63</option>
-      <option value="US71">US-71</option>
       <option value="US65">US-65</option>
+      <option value="US69">US-69</option>
+      <option value="US69">US-70</option>
+      <option value="US71">US-71</option>
+      <option value="US166">US-166</option>
+      <option value="US270">US-270</option>
+      <option value="US400">US-400</option>
       <option value="US412">US-412</option>
       <option value="statehwy">State Highways</option>
     </select>
@@ -134,20 +148,29 @@
   <label>State:
     <select id="stateFilter">
       <option value="all">All</option>
+      <option value="Alabama">Alabama</option>
       <option value="Arkansas">Arkansas</option>
+      <option value="Florida">Florida</option>
+      <option value="Georgia">Georgia</option>
       <option value="Illinois">Illinois</option>
       <option value="Kansas">Kansas</option>
+      <option value="Louisiana">Louisiana</option>
       <option value="Missouri">Missouri</option>
+      <option value="Mississippi">Mississippi</option>
       <option value="Oklahoma">Oklahoma</option>
+      <option value="Tennessee">Tennessee</option>
       <option value="Texas">Texas</option>
+      <option value="International">International</option>
     </select>
   </label>
   <label>State Region:
     <select id="regionFilter">
       <option value="all">All</option>
       <option value="northern">Northern</option>
+      <option value="eastern">Eastern</option>
       <option value="central">Central</option>
       <option value="southern">Southern</option>
+      <option value="western">Western</option>
     </select>
   </label>
     <label>Network:
@@ -168,3602 +191,7 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
-<script>
-const cameras = [
-  // STATE HIGHWAYS IN ARKANSAS
-    {
-        id: 168,
-        coords: [35.84816, -93.36130],
-        name: "AR-16 @ AR-12 (Edwards Junction)",
-        state: "Arkansas",
-        region: "northern",
-        route: "statehwy",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 434,
-        coords: [35.79718, -91.98201],
-        name: "AR-5 @ Little Raccoon Creek",
-        state: "Arkansas",
-        region: "northern",
-        route: "statehwy",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 685,
-        coords: [35.41312, -93.53231],
-        name: "AR-109 @ Arkansas River",
-        state: "Arkansas",
-        region: "northern",
-        route: "statehwy",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 371,
-        coords: [35.22629, -93.14910],
-        name: "AR-7 @ Arkansas River",
-        state: "Arkansas",
-        region: "northern",
-        route: "statehwy",
-        type: "image",
-        network: "DOT"
-    },
-  // I 40 IN ARKANSAS
-    {
-        id: 452,
-        coords: [35.45196, -94.44078],
-        name: "I-40 @ Oklahoma State Line",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 218,
-        coords: [35.46019, -94.40120],
-        name: "I-40 @ MM 2.6 (Welcome Center)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 513,
-        coords: [35.45965, -94.39200],
-        name: "I-40 @ MM 3.1 (Lee Creek Rd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 523,
-        coords: [35.46265, -94.35574],
-        name: "I-40 @ MM 5.3 (AR 59)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 217,
-        coords: [35.45599, -94.32395],
-        name: "I-40 @ MM 7.1",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 514,
-        coords: [35.45635, -94.31229],
-        name: "I-40 @ MM 7.9",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 219,
-        coords: [35.46168, -94.28986],
-        name: "I-40 @ MM 8.9",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 517,
-        coords: [35.47894, -94.24814],
-        name: "I-40 @ MM 11.8",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 737,
-        coords: [35.48297, -94.24175],
-        name: "I-40 @ MM 12.3 (I-49)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 515,
-        coords: [35.48907, -94.22579],
-        name: "I-40 @ MM 13.3 (US 71B)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 445,
-        coords: [35.49074, -94.21717],
-        name: "I-40 @ MM 13.8",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 516,
-        coords: [35.51547, -94.11354],
-        name: "I-40 @ MM 20.1 (Dyer)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 507,
-        coords: [35.52812, -94.04638],
-        name: "I-40 @ MM 24.3 (Mulberry)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 506,
-        coords: [35.51509, -93.81933],
-        name: "I-40 @ MM 37.4 (Ozark)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 518,
-        coords: [35.49738, -93.6605],
-        name: "I-40 @ MM 46.5 (Coal Hill)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 505,
-        coords: [35.46501, -93.52132],
-        name: "I-40 @ MM 54.9 (US 64)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 504,
-        coords: [35.45827, -93.48219],
-        name: "I-40 @ MM 57.2 (S Crawford St)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 503,
-        coords: [35.45247, -93.46514],
-        name: "I-40 @ MM 58.3 (S Rogers St)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 502,
-        coords: [35.41418, -93.38428],
-        name: "I-40 @ MM 63.9 (Lamar)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 501,
-        coords: [35.38369, -93.35640],
-        name: "I-40 @ MM 66.6 (Knoxville)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 419,
-        coords: [35.34692, -93.32906],
-        name: "I-40 @ MM 69.7",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 498,
-        coords: [35.32181, -93.19121],
-        name: "I-40 @ MM 77.7",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 487,
-        coords: [35.30608, -93.13849],
-        name: "I-40 @ MM 81.2 (AR 27)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 488,
-        coords: [35.29080, -93.10670],
-        name: "I-40 @ MM 83.3 (Weir Rd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 489,
-        coords: [35.28265, -93.09260],
-        name: "I-40 @ MM 84.3 (AR 331)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 490,
-        coords: [35.24973, -93.03506],
-        name: "I-40 @ MM 88.2 (Pottsville)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 491,
-        coords: [35.25280, -92.93745],
-        name: "I-40 @ MM 88.2 (Atkins)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 446,
-        coords: [35.21932, -92.83002],
-        name: "I-40 @ MM 100.7 (Blackwell)",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 519,
-        coords: [35.17498, -92.74436],
-        name: "I-40 @ MM 106.6 (Oak St)",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 447,
-        coords: [35.17417, -92.71784],
-        name: "I-40 @ MM 108 (AR 9)",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 499,
-        coords: [35.16292, -92.64119],
-        name: "I-40 @ MM 112.5 (Plumerville)",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 499,
-        coords: [35.15313, -92.55346],
-        name: "I-40 @ MM 117.6 (Menifee)",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 438,
-        coords: [35.11152, -92.43478],
-        name: "I-40 @ MM 125.2 (US 65)",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 33,
-        coords: [35.09520, -92.42637],
-        name: "I-40 @ MM 126.5 (US 64)",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 450,
-        coords: [35.07729, -92.41400],
-        name: "I-40 @ MM 128",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 449,
-        coords: [35.07147, -92.41682],
-        name: "I-40 @ MM 128.4",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 448,
-        coords: [35.06089, -92.41743],
-        name: "I-40 @ MM 129.1",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 34,
-        coords: [35.04794, -92.41364],
-        name: "I-40 @ MM 130",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 32,
-        coords: [35.03310, -92.40936],
-        name: "I-40 @ MM 131",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 303,
-        coords: [35.00870, -92.41031],
-        name: "I-40 @ MM 132.7",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 312,
-        coords: [35.00192, -92.41180],
-        name: "I-40 @ MM 133.3",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 316,
-        coords: [34.99210, -92.41526],
-        name: "I-40 @ MM 133.8",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 313,
-        coords: [34.96630, -92.42053],
-        name: "I-40 @ MM 135",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 314,
-        coords: [34.95252, -92.42247],
-        name: "I-40 @ MM 136",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 19,
-        coords: [34.89845, -92.40141],
-        name: "I-40 @ MM 140.9",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 305,
-        coords: [34.88855, -92.38334],
-        name: "I-40 @ MM 142.1",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 309,
-        coords: [34.88254, -92.37664],
-        name: "I-40 @ MM 142.7",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 357,
-        coords: [34.84556, -92.34976],
-        name: "I-40 @ MM 145.7",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 358,
-        coords: [34.83588, -92.34785],
-        name: "I-40 @ MM 146.3",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 190,
-        coords: [34.82667, -92.34552],
-        name: "I-40 @ MM 146.9 (I-430)",
-        state: "Arkansas",
-        region: "central",
-        route: "I40",
-        type: "image",
-        network: "DOT"
-    },
-  // I-49 IN ARKANSAS
-    {
-        id: 747,
-        coords: [36.49948, -94.38270],
-        name: "I-49 @ MM 105 (Missouri State Line)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 746,
-        coords: [36.46498, -94.37876],
-        name: "I-49 @ MM 102 (Highlands Blvd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 745,
-        coords: [36.43240, -94.36930],
-        name: "I-49 @ MM 100 (Gravette)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 744,
-        coords: [36.42312, -94.32035],
-        name: "I-49 @ MM 97 (Centerton)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 743,
-        coords: [36.41636, -94.23245],
-        name: "I-49 @ MM 92.1 (Bella Vista Bypass)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 337,
-        coords: [36.41247, -94.21323],
-        name: "I-49 @ MM 91.1 (Bella Vista Bypass)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 343,
-        coords: [36.40440, -94.19831],
-        name: "I-49 @ MM 90.1 (Slaughter Pen Rd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 338,
-        coords: [36.40079, -94.18663],
-        name: "I-49 @ MM 89.4 (J St)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 339,
-        coords: [36.39930, -94.18465],
-        name: "I-49 @ MM 89.2 (South of J St)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 340,
-        coords: [36.39330, -94.18363],
-        name: "I-49 @ MM 88.9 (Little Flock)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 341,
-        coords: [36.38907, -94.18355],
-        name: "I-49 @ MM 88.4 (Tiger Blvd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 342,
-        coords: [36.38157, -94.17540],
-        name: "I-49 @ MM 87.8 (Central Ave)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 344,
-        coords: [36.37441, -94.16891],
-        name: "I-49 @ MM 87.2 (Regen Hut Rd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 345,
-        coords: [36.37071, -94.17003],
-        name: "I-49 @ MM 86.9 (Battlefield Blvd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 346,
-        coords: [36.36378, -94.17568],
-        name: "I-49 @ MM 86.3 (8th St)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 366,
-        coords: [36.35635, -94.17822],
-        name: "I-49 @ MM 85.9 (SE 14th St)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 347,
-        coords: [36.33504, -94.18347],
-        name: "I-49 @ MM 84.3 (Walton Blvd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 348,
-        coords: [36.31477, -94.18513],
-        name: "I-49 @ MM 82.9 (New Hope Rd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 349,
-        coords: [36.30617, -94.18424],
-        name: "I-49 @ MM 82.5 (Embassy Suites)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 350,
-        coords: [36.30010, -94.17915],
-        name: "I-49 @ MM 81.8 (Pauline Whitaker)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 351,
-        coords: [36.29427, -94.16492],
-        name: "I-49 @ MM 80.9 (Ajax Ave)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 372,
-        coords: [36.28342, -94.15665],
-        name: "I-49 @ MM 80 (Pleasant Grove Rd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 364,
-        coords: [36.26534, -94.15025],
-        name: "I-49 @ MM 78.7 (Oakwood Ave)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 45,
-        coords: [36.25906, -94.15037],
-        name: "I-49 @ MM 78.3",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 363,
-        coords: [36.25443, -94.15043],
-        name: "I-49 @ MM 77.9 (Monroe Ave)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 362,
-        coords: [36.24046, -94.15515],
-        name: "I-49 @ MM 76.8 (AR 612)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 253,
-        coords: [36.23748, -94.16075],
-        name: "I-49 @ MM 76.5",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 361,
-        coords: [36.23350, -94.17062],
-        name: "I-49 @ MM 75.9 (Puppy Creek)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 360,
-        coords: [36.22602, -94.17900],
-        name: "I-49 @ MM 75.2 (Wagon Wheel Rd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 174,
-        coords: [36.22087, -94.18048],
-        name: "I-49 @ MM 74.9",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 352,
-        coords: [36.21028, -94.18210],
-        name: "I-49 @ MM 74.1",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 335,
-        coords: [36.20065, -94.18185],
-        name: "I-49 @ MM 73.4 (Falcon Rd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 334,
-        coords: [36.19332, -94.17988],
-        name: "I-49 @ MM 72.9 (Elm Springs Rd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 333,
-        coords: [36.18547, -94.17894],
-        name: "I-49 @ MM 72.2",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 332,
-        coords: [36.17534, -94.18604],
-        name: "I-49 @ MM 71.5 (Sunset Ave)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 331,
-        coords: [36.16095, -94.18665],
-        name: "I-49 @ MM 70.5 (Watkins Ave)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 330,
-        coords: [36.15388, -94.18647],
-        name: "I-49 @ MM 70 (Don Tyson Blvd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 329,
-        coords: [36.13847, -94.18280],
-        name: "I-49 @ MM 69 (Johnson Mill Blvd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 328,
-        coords: [36.12783, -94.18093],
-        name: "I-49 @ MM 68.5",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 327,
-        coords: [36.12152, -94.17955],
-        name: "I-49 @ MM 67.8",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 326,
-        coords: [36.10998, -94.16989],
-        name: "I-49 @ MM 66.7",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 735,
-        coords: [36.10807, -94.17443],
-        name: "I-49 @ MM 66.3 (Fulbright Expwy)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 325,
-        coords: [36.10570, -94.17980],
-        name: "I-49 @ MM 66 (Garland Ave)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 324,
-        coords: [36.09698, -94.18737],
-        name: "I-49 @ MM 65.2",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 323,
-        coords: [36.09023, -94.19281],
-        name: "I-49 @ MM 64.7 (Stephen Carr Blvd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 322,
-        coords: [36.07824, -94.20069],
-        name: "I-49 @ MM 63.7 (Wedington Dr)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 321,
-        coords: [36.06930, -94.20260],
-        name: "I-49 @ MM 63.1",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 319,
-        coords: [36.04544, -94.19089],
-        name: "I-49 @ MM 61.3",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 318,
-        coords: [36.03690, -94.18890],
-        name: "I-49 @ MM 60.7",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 317,
-        coords: [36.01629, -94.19418],
-        name: "I-49 @ MM 59.4",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 734,
-        coords: [35.99692, -94.19623],
-        name: "I-49 @ MM 58 (Greenland)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 739,
-        coords: [35.87289, -94.17622],
-        name: "I-49 @ MM 49",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 733,
-        coords: [35.81909, -94.19145],
-        name: "I-49 @ MM 45 (AR 74)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 10,
-        coords: [35.80842, -94.18883],
-        name: "I-49 @ MM 44.1",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 304,
-        coords: [35.76785, -94.18927],
-        name: "I-49 @ MM 41.2 (Bobby Hopper Tun.)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 165,
-        coords: [35.73169, -94.19831],
-        name: "I-49 @ MM 39",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 739,
-        coords: [35.70928, -94.19824],
-        name: "I-49 @ MM 37",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 731,
-        coords: [35.67103, -94.16512],
-        name: "I-49 @ MM 33.7 (Chester)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 730,
-        coords: [35.61298, -94.19080],
-        name: "I-49 @ MM 29.3 (Mountainburg)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 729,
-        coords: [35.58263, -94.21640],
-        name: "I-49 @ MM 26.7",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 736,
-        coords: [35.51372, -94.23812],
-        name: "I-49 @ MM 22",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 728,
-        coords: [35.49208, -94.24475],
-        name: "I-49 @ MM 20 (Collum Ln)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 738,
-        coords: [35.48653, -94.24360],
-        name: "I-49 @ MM 19.5",
-        state: "Arkansas",
-        region: "northern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 425,
-        coords: [33.51693, -94.02373],
-        name: "I-49 @ MM 42",
-        state: "Arkansas",
-        region: "southern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 424,
-        coords: [33.40167, -94.00700],
-        name: "I-49 @ MM 30",
-        state: "Arkansas",
-        region: "southern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 164,
-        coords: [33.38731, -94.01917],
-        name: "I-49 @ MM 29 (AR 151)",
-        state: "Arkansas",
-        region: "southern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 423,
-        coords: [33.33944, -93.97136],
-        name: "I-49 @ MM 24",
-        state: "Arkansas",
-        region: "southern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 484,
-        coords: [33.08212, -93.89805],
-        name: "I-49 @ MM 4",
-        state: "Arkansas",
-        region: "southern",
-        route: "I49",
-        type: "image",
-        network: "DOT"
-    },
-    // I 430 IN ARKANSAS
-    {
-        id: 834,
-        coords: [34.82037, -92.34541],
-        name: "I-430 SB @ I-40",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 835,
-        coords: [34.81890, -92.34321],
-        name: "I-430 NB @ I-40",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 308,
-        coords: [34.81305, -92.35379],
-        name: "I-430 @ MM 11.9 (Maumelle Blvd)",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 544,
-        coords: [34.80810, -92.36066],
-        name: "I-430 @ MM 11.4",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 543,
-        coords: [34.80685, -92.36289],
-        name: "I-430 @ MM 11.2",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 29,
-        coords: [34.80525, -92.36595],
-        name: "I-430 @ MM 11",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 542,
-        coords: [34.80060, -92.37466],
-        name: "I-430 @ Arkansas River (North)",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 541,
-        coords: [34.80060, -92.37466],
-        name: "I-430 @ Arkansas River (South)",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 539,
-        coords: [34.79686, -92.38275],
-        name: "I-430 @ MM 9.9 (North)",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 540,
-        coords: [34.79686, -92.38275],
-        name: "I-430 @ MM 9.9 (South)",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 532,
-        coords: [34.78927, -92.39155],
-        name: "I-430 @ MM 9.1 (Cantrell North)",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 531,
-        coords: [34.78927, -92.39155],
-        name: "I-430 @ MM 9.1 (Cantrell South)",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 530,
-        coords: [34.78927, -92.39155],
-        name: "I-430 @ MM 9.1 (Cantrell West)",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 618,
-        coords: [34.77964, -92.39048],
-        name: "I-430 @ MM 8.5",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 307,
-        coords: [34.76300, -92.39083],
-        name: "I-430 @ MM 7.3",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 27,
-        coords: [34.74738, -92.39171],
-        name: "I-430 @ MM 6.3 (I-630)",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 315,
-        coords: [34.74663, -92.39091],
-        name: "I-430 @ MM 6.2 (I-630)",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 367,
-        coords: [34.74411, -92.39016],
-        name: "I-430 @ MM 6 (Big Rock North)",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 709,
-        coords: [34.74411, -92.39016],
-        name: "I-430 @ MM 6 (Big Rock South)",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 838,
-        coords: [34.73576, -92.39457],
-        name: "I-430 @ MM 5.3 (Shackleford Rd)",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 297,
-        coords: [34.72615, -92.40096],
-        name: "I-430 @ MM 4.5",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 28,
-        coords: [34.71525, -92.40164],
-        name: "I-430 @ MM 3.7 (Colonel Glenn Rd)",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 266,
-        coords: [34.68244, -92.40616],
-        name: "I-430 @ MM 1.5 (Stagecoach Rd)",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 187,
-        coords: [34.66789, -92.40517],
-        name: "I-430 @ MM 0.5",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 49,
-        coords: [34.66199, -92.40275],
-        name: "I-430 @ I-30",
-        state: "Arkansas",
-        region: "central",
-        route: "I430",
-        type: "image",
-        network: "DOT"
-    },
-    // I 540 IN ARKANSAS
-    {
-        id: 526,
-        coords: [35.45340, -94.32077],
-        name: "I-540 @ MM 14.6",
-        state: "Arkansas",
-        region: "northern",
-        route: "I540",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 453,
-        coords: [35.44705, -94.32038],
-        name: "I-540 @ MM 14.1 (US 64)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I540",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 524,
-        coords: [35.42561, -94.34339],
-        name: "I-540 @ MM 11.9 (4th ST)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I540",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 458,
-        coords: [35.41941, -94.35196],
-        name: "I-540 @ MM 11.2 (Arkansas River)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I540",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 534,
-        coords: [35.40347, -94.36638],
-        name: "I-540 @ MM 9.8 (Kelly Highway)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I540",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 527,
-        coords: [35.38507, -94.36417],
-        name: "I-540 @ MM 8.5 (Grand Ave)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I540",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 454,
-        coords: [35.35932, -94.36502],
-        name: "I-540 @ MM 6.7 (Rogers Ave)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I540",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 525,
-        coords: [35.34049, -94.38022],
-        name: "I-540 @ MM 5.1 (Ft. Smith Airport)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I540",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 535,
-        coords: [35.33706, -94.39115],
-        name: "I-540 @ MM 4.4 (Old Greenwood Rd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I540",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 536,
-        coords: [35.33044, -94.39451],
-        name: "I-540 @ MM 3.9 (Zero St)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I540",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 528,
-        coords: [35.31231, -94.39913],
-        name: "I-540 @ MM 2.6 (US 71/71B)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I540",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 537,
-        coords: [35.30295, -94.41016],
-        name: "I-540 @ MM 1.7 (Jenny Lind Rd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I540",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 538,
-        coords: [35.29349, -94.42318],
-        name: "I-540 @ MM 0.6 (US 271)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I540",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 529,
-        coords: [35.29201, -94.43484],
-        name: "I-540 @ Oklahoma State Line",
-        state: "Arkansas",
-        region: "northern",
-        route: "I540",
-        type: "image",
-        network: "DOT"
-    },
-    // I 555 IN ARKANSAS
-    {
-        id: 697,
-        coords: [35.85716, -90.77743],
-        name: "I-555 @ MM 50",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 698,
-        coords: [35.83532, -90.75017],
-        name: "I-555 @ MM 47.8 (Washington Ave)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 699,
-        coords: [35.81919, -90.73471],
-        name: "I-555 @ MM 46.2 (Woodsprings Rd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 199,
-        coords: [35.80894, -90.72014],
-        name: "I-555 @ MM 45.1 (Southwest Dr)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 198,
-        coords: [35.80724, -90.69852],
-        name: "I-555 @ MM 43.9 (Harrisburg Rd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 727,
-        coords: [35.80711, -90.67820],
-        name: "I-555 @ MM 42.7 (Caraway Rd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 197,
-        coords: [35.80712, -90.66930],
-        name: "I-555 @ MM 42.2 (Stadium Blvd)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 700,
-        coords: [35.80693, -90.63641],
-        name: "I-555 @ MM 40.3 (Nettleton Ave)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 710,
-        coords: [35.80161, -90.62467],
-        name: "I-555 @ MM 39.5 (MLK Dr)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 701,
-        coords: [35.77525, -90.58574],
-        name: "I-555 @ MM 36.7 (Nestle)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 702,
-        coords: [35.75618, -90.57852],
-        name: "I-555 @ MM 35.1 (Bay)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 703,
-        coords: [35.67823, -90.55277],
-        name: "I-555 @ MM 29.1 (Trumann)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 704,
-        coords: [35.63075, -90.50086],
-        name: "I-555 @ MM 24.4 (AR 463)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 711,
-        coords: [35.54657, -90.49676],
-        name: "I-555 @ MM 18.5 (Payneway)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 705,
-        coords: [35.52610, -90.43062],
-        name: "I-555 @ MM 14.3 (AR 75/14)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 712,
-        coords: [35.51989, -90.41216],
-        name: "I-555 @ MM 13.2 (AR 149/308)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 713,
-        coords: [35.48038, -90.35859],
-        name: "I-555 @ MM 9 (AR 118)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 714,
-        coords: [35.47347, -90.33482],
-        name: "I-555 @ MM 7.5 (AR 135)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 706,
-        coords: [35.41132, -90.28261],
-        name: "I-555 @ MM 1.9 (Gilmore)",
-        state: "Arkansas",
-        region: "northern",
-        route: "I555",
-        type: "image",
-        network: "DOT"
-    },
-    // I 630 IN ARKANSAS
-    {
-        id: 353,
-        coords: [34.74691, -92.37576],
-        name: "I-630 @ MM 6.5 (John Barrow Rd)",
-        state: "Arkansas",
-        region: "central",
-        route: "I630",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 368,
-        coords: [34.74682, -92.36815],
-        name: "I-630 @ MM 6",
-        state: "Arkansas",
-        region: "central",
-        route: "I630",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 369,
-        coords: [34.7459, -92.35578],
-        name: "I-630 @ MM 5.3 (Mississippi Ave)",
-        state: "Arkansas",
-        region: "central",
-        route: "I630",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 370,
-        coords: [34.74499, -92.34177],
-        name: "I-630 @ MM 4.5 (University Ave)",
-        state: "Arkansas",
-        region: "central",
-        route: "I630",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 375,
-        coords: [34.74495, -92.33197],
-        name: "I-630 @ MM 4 (Fair Park Blvd)",
-        state: "Arkansas",
-        region: "central",
-        route: "I630",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 354,
-        coords: [34.74459, -92.32251],
-        name: "I-630 @ MM 3.4 (Cedar St)",
-        state: "Arkansas",
-        region: "central",
-        route: "I630",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 355,
-        coords: [34.74409, -92.30954],
-        name: "I-630 @ MM 2.7 (Woodrow St)",
-        state: "Arkansas",
-        region: "central",
-        route: "I630",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 129,
-        coords: [34.74363, -92.29976],
-        name: "I-630 @ MM 2.1",
-        state: "Arkansas",
-        region: "central",
-        route: "I630",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 356,
-        coords: [34.74280, -92.28573],
-        name: "I-630 @ MM 1.3 (MLK Dr)",
-        state: "Arkansas",
-        region: "central",
-        route: "I630",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 382,
-        coords: [34.73779, -92.27212],
-        name: "I-630 @ MM 0.5 (Main St)",
-        state: "Arkansas",
-        region: "central",
-        route: "I630",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 374,
-        coords: [34.73443, -92.26577],
-        name: "I-630 @ MM 0.2",
-        state: "Arkansas",
-        region: "central",
-        route: "I630",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 130,
-        coords: [34.73270, -92.26185],
-        name: "I-630 @ 1-30",
-        state: "Arkansas",
-        region: "central",
-        route: "I630",
-        type: "image",
-        network: "DOT"
-    },
-    // US 62 IN ARKANSAS
-    {
-        id: 376,
-        coords: [36.34003, -92.38526],
-        name: "US-62 @ AR 5",
-        state: "Arkansas",
-        region: "northern",
-        route: "US62",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 378,
-        coords: [36.34954, -92.37097],
-        name: "US-62 @ Cardinal Dr",
-        state: "Arkansas",
-        region: "northern",
-        route: "US62",
-        type: "image",
-        network: "DOT"
-    },
-        {
-        id: 377,
-        coords: [36.35355, -92.35697],
-        name: "US-62 @ Club Blvd",
-        state: "Arkansas",
-        region: "northern",
-        route: "US62",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 456,
-        coords: [36.37031, -92.23575],
-        name: "US-62 @ Norfolk Lake",
-        state: "Arkansas",
-        region: "northern",
-        route: "US62",
-        type: "image",
-        network: "DOT"
-    },
-    // US 63 IN ARKANSAS
-    {
-        id: 173,
-        coords: [36.49483, -91.53645],
-        name: "US-63 @ Spring River",
-        state: "Arkansas",
-        region: "northern",
-        route: "US65",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 433,
-        coords: [36.10184, -91.09750],
-        name: "US-63 @ Black River",
-        state: "Arkansas",
-        region: "northern",
-        route: "US65",
-        type: "image",
-        network: "DOT"
-    },
-    // US 65 IN ARKANSAS
-    {
-        id: 167,
-        coords: [36.46515, -93.21920],
-        name: "US-65 @ Cricket Creek",
-        state: "Arkansas",
-        region: "northern",
-        route: "US65",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 169,
-        coords: [35.78835, -92.53925],
-        name: "US-65 @ Peyton Creek",
-        state: "Arkansas",
-        region: "northern",
-        route: "US65",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 428,
-        coords: [35.60508, -92.45835],
-        name: "US-65 @ AR-9 (Clinton)",
-        state: "Arkansas",
-        region: "northern",
-        route: "US65",
-        type: "image",
-        network: "DOT"
-    },
-  // US 71 IN ARKANSAS
-   {
-        id: 478,
-        coords: [34.76281, -94.07611],
-        name: "US-71 @ Fourche La Fave River",
-        state: "Arkansas",
-        region: "central",
-        route: "US71",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 477,
-        coords: [34.13015, -94.31379],
-        name: "US-71 @ Gilham Railroad Overpass",
-        state: "Arkansas",
-        region: "southern",
-        route: "US71",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 426,
-        coords: [33.55462, -94.04189],
-        name: "US-71 @ Red River",
-        state: "Arkansas",
-        region: "southern",
-        route: "US71",
-        type: "image",
-        network: "DOT"
-    },
-  // US 412 IN ARKANSAS
-    {
-        id: 166,
-        coords: [36.17642, -94.56203],
-        name: "US-412 @ Welcome Center",
-        state: "Arkansas",
-        region: "northern",
-        route: "US412",
-        type: "image"
-    },
-    {
-        id: 545,
-        coords: [36.17309, -94.36613],
-        name: "US-412 @ Illinois River",
-        state: "Arkansas",
-        region: "northern",
-        route: "US412",
-        type: "image",
-        network: "DOT"
-    },
-    {
-        id: 521,
-        coords: [36.17135, -94.01966],
-        name: "US-412 @ Beaver Lake",
-        state: "Arkansas",
-        region: "northern",
-        route: "US412",
-        type: "image",
-        network: "DOT"
-    },
-    // WeatherStem Cameras
-    {
-        id: 'quapaweoc',
-        coords: [36.92199, -94.83715],
-        name: "Quapaw Nation EOC",
-        state: "Oklahoma",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherstem",
-        src: "https://images.weatherstem.com/skycamera/ottawa/quapaw/cumulus/snapshot.jpg"
-    },
-    // WeatherBug Cameras
-    {
-        id: 'bethany',
-        coords: [40.28130, -94.01765],
-        name: "Bethany (South Harrison HS)",
-        state: "Missouri",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/BTHSH/BTHSH_l.jpg"
-    },
-    {
-        id: 'norborne',
-        coords: [39.29890, -93.67271],
-        name: "Norborne (Norborne Elementary)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/NRBRN/NRBRN_l.jpg"
-    },
-    {
-        id: 'forthaysstate',
-        coords: [38.87077, -99.34774],
-        name: "Hays (Fort Hays State University)",
-        state: "Kansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/FTHYS/FTHYS_l.jpg"
-    },
-    {
-        id: 'salinaksal',
-        coords: [38.84173, -97.60966],
-        name: "Salina (KSAL-AM)",
-        state: "Kansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/KSALA/KSALA_l.jpg"
-    },
-    {
-        id: 'hutchinsonfirstnational',
-        coords: [38.05250, -97.93219],
-        name: "Hutchinson (First National Bank)",
-        state: "Kansas",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/FNBKS/FNBKS_l.jpg"
-    },
-    {
-        id: 'commercewichita',
-        coords: [37.71086, -97.22393],
-        name: "Wichita (Commerce Bank)",
-        state: "Kansas",
-        region: "southern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/WCHTB/WCHTB_l.jpg"
-    },
-    {
-        id: 'riverfrontwichita',
-        coords: [37.68132, -97.34608],
-        name: "Wichita (Riverfront Stadium)",
-        state: "Kansas",
-        region: "southern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/RFSKS/RFSKS_l.jpg"
-    },
-    {
-        id: 'aviationwichita',
-        coords: [37.63217, -97.27370],
-        name: "Wichita (Aviation Museum)",
-        state: "Kansas",
-        region: "southern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/WCHKM/WCHKM_l.jpg"
-    },
-    {
-        id: 'ulyssessschool',
-        coords: [37.57995, -101.35989],
-        name: "Ulyssess (Joyce Elementary)",
-        state: "Kansas",
-        region: "southern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/ULYSL/ULYSL_l.jpg"
-    },
-    {
-        id: 'stantoncountyhs',
-        coords: [37.57548, -101.75455],
-        name: "Johnson City (Stanton County HS)",
-        state: "Kansas",
-        region: "southern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/KJOSC/KJOSC_l.jpg"
-    },
-    {
-        id: 'doniphancareer',
-        coords: [36.62007, -90.82395],
-        name: "Doniphan (Career Center)",
-        state: "Missouri",
-        region: "southern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/DNPHN/DNPHN_l.jpg"
-    },
-    {
-        id: 'pearidgehs',
-        coords: [36.45414, -94.13423],
-        name: "Pea Ridge High School",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/PRDGP/PRDGP_l.jpg"
-    },
-    {
-        id: 'cooperems',
-        coords: [36.43722, -94.23033],
-        name: "Cooper Elementary School",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/BLCHS/BLCHS_l.jpg"
-    },
-    {
-        id: 'texline',
-        coords: [36.37582, -103.01879],
-        name: "Texline (Texline ISD)",
-        state: "Texas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/TXLNP/TXLNP_l.jpg"
-    },
-    {
-        id: 'bvillesquare',
-        coords: [36.37283, -94.20892],
-        name: "Bentonville Square",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/BENAK/BENAK_l.jpg"
-    },
-    {
-        id: 'decaturwatertreat',
-        coords: [36.34348, -94.46913],
-        name: "Decatur Waste Water Department",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/DCTRA/DCTRA_l.jpg"
-    },
-    {
-        id: 'fulbrightjhs',
-        coords: [36.32023, -94.23512],
-        name: "Fulbright Junior High School",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/BNTAR/BNTAR_l.jpg"
-    },
-    {
-        id: 'embassy',
-        coords: [36.30598, -94.18603],
-        name: "Embassy Suites Rogers",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/KNWAR/KNWAR_l.jpg"
-    },
-    {
-        id: 'salinahs',
-        coords: [36.30149, -95.14783],
-        name: "Salina High School",
-        state: "Oklahoma",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/SALIN/SALIN_l.jpg"
-    },
-    {
-        id: 'allenems',
-        coords: [36.19887, -94.54368],
-        name: "Allen Elementary School",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/SLMBN/SLMBN_l.jpg"
-    },
-    {
-        id: 'harberhs',
-        coords: [36.18348, -94.21424],
-        name: "Har-Ber High School",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/SPDLE/SPDLE_l.jpg"
-    },
-    {
-        id: 'archildrensnw',
-        coords: [36.16216, -94.19076],
-        name: "Arkansas Children's Northwest",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/ACNAR/ACNAR_l.jpg"
-    },
-    {
-        id: 'tulsadenver',
-        coords: [36.15183, -95.99386],
-        name: "Downtown Tulsa (Denver Station)",
-        state: "Oklahoma",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/DSTOK/DSTOK_l.jpg"
-    },
-    {
-        id: 'booneema',
-        coords: [36.11146, -93.03184],
-        name: "Boone County EMA",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/BCHRN/BCHRN_l.jpg"
-    },
-    {
-        id: 'huntsmiddle',
-        coords: [36.08641, -93.74367],
-        name: "Huntsville Middle School",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/HNTMD/HNTMD_l.jpg"
-    },
-    {
-        id: 'graduatefay',
-        coords: [36.06353, -94.15946],
-        name: "Graduate Hotel Fayetteville",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/FYTHC/FYTHC_l.jpg"
-    },
-    {
-        id: 'mtsequoia',
-        coords: [36.06480, -94.13848],
-        name: "Mount Sequoia",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/KNWAH/KNWAH_l.jpg"
-    },
-    {
-        id: 'jenksintermediate',
-        coords: [36.02963, -96.00170],
-        name: "Jenks (West Intermediate)",
-        state: "Oklahoma",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/JNKSW/JNKSW_l.jpg"
-    },
-    {
-        id: 'kesslermtn',
-        coords: [36.01807, -94.21910],
-        name: "Kessler Mountain",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/FYTAR/FYTAR_l.jpg"
-    },
-    {
-        id: 'pgtelco',
-        coords: [35.95111, -94.42418],
-        name: "PG Telco Tower",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/LNCAR/LNCAR_s.jpg"
-    },
-    {
-        id: 'cartwrightmt',
-        coords: [35.71004, -94.13754],
-        name: "Cartwright Mountain",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/MNTNB/MNTNB_l.jpg"
-    },
-    {
-        id: 'borger',
-        coords: [35.67569, -101.38848],
-        name: "Borger (Borger ISD)",
-        state: "Texas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/BORGE/BORGE_l.jpg"
-    },
-    {
-        id: 'kisrfm',
-        coords: [35.52518, -94.37447],
-        name: "KISR-FM Tower",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/KISRM/KISRM_l.jpg"
-    },
-    {
-        id: 'almainter',
-        coords: [35.49353, -94.24016],
-        name: "Alma Intermediate School",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/ALMIN/ALMIN_l.jpg"
-    },
-    {
-        id: 'okcfox25',
-        coords: [35.46850, -97.51617],
-        name: "Oklahoma City (FOX 25)",
-        state: "Oklahoma",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/KOKHT/KOKHT_l.jpg"
-    },
-    {
-        id: 'lauras',
-        coords: [35.39208, -94.42919],
-        name: "Miss Laura's Museum",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/FTSMA/FTSMA_l.jpg"
-    },
-    {
-        id: 'ftsmithpublic',
-        coords: [35.37428, -94.39657],
-        name: "Ft. Smith Public Library",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/FTSPL/FTSPL_l.jpg"
-    },
-    {
-        id: 'stiglersports',
-        coords: [35.24882, -95.13501],
-        name: "Stigler Sports Complex",
-        state: "Oklahoma",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/STGLR/STGLR_l.jpg"
-    },
-    {
-        id: 'mountmagazine',
-        coords: [35.16711, -93.64492],
-        name: "Mount Magazine",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/PRSMM/PRSMM_l.jpg"
-    },
-    {
-        id: 'bonnevillehs',
-        coords: [35.14645, -93.91152],
-        name: "Bonneville (Bonneville High School)",
-        state: "Arkansas",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/BNVMS/BNVMS_l.jpg"
-    },
-    {
-        id: 'danvillearkwest',
-        coords: [35.05563, -93.39216],
-        name: "Danville (ArkWest Communications)",
-        state: "Arkansas",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/DNVLL/DNVLL_l.jpg"
-    },
-    {
-        id: 'waldronhs',
-        coords: [34.90024, -94.11506],
-        name: "Waldron (Waldron High School)",
-        state: "Arkansas",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/WLDWL/WLDWL_l.jpg"
-    },
-    {
-        id: 'littlerockwest',
-        coords: [34.75562, -92.34449],
-        name: "Little Rock (Plaza West Building)",
-        state: "Arkansas",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/PWBLR/PWBLR_l.jpg"
-    },
-    {
-        id: 'friona',
-        coords: [34.63791, -102.73009],
-        name: "Friona (Firona High School)",
-        state: "Texas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/FRION/FRION_l.jpg"
-    },
-    {
-        id: 'mena',
-        coords: [34.58262, -94.22165],
-        name: "Mena (Mena High School)",
-        state: "Arkansas",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "weatherbug",
-        src: "https://instacam.earthnetworks.com/instacamimg/MNHCK/MNHCK_l.jpg"
-    },
-    // KY3 SKYCAMS
-    {
-        id: 'lakeozarks',
-        coords: [38.12862, -92.71772],
-        name: "Lake of the Ozarks (Margaritaville)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=165938299e22189b0266e15a04bf4a08&type=image&format=image.jpg"
-    },
-    {
-        id: 'lebanon',
-        coords: [37.68138, -92.63399],
-        name: "Lebanon (Mercy Hospital)",
-        state: "Missouri",
-        region: "southern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=956b218ab7941f7e2b26cf90f9a4ea8e&type=image&format=image.jpg"
-    },
-    {
-        id: 'bolivargolf',
-        coords: [37.58640, -93.34636],
-        name: "Bolivar (Silo Ridge Country Club)",
-        state: "Missouri",
-        region: "southern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=e567eb3700ca1dfeba10225469e247ae&type=image&format=image.jpg"
-    },
-    {
-        id: 'springfieldky3',
-        coords: [37.18347, -93.30336],
-        name: "Springfield (KY3 Skycam)",
-        state: "Missouri",
-        region: "southern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=74b9559e13f12872cdfefdca5762238f&type=image&format=image.jpg"
-    },
-    {
-        id: 'springfield65',
-        coords: [37.18126, -93.22286],
-        name: "Springfield (US 65 @ Sunshine)",
-        state: "Missouri",
-        region: "southern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=2f73f55f483fae433c9fd2353f110354&type=image&format=image.jpg"
-    },
-    {
-        id: 'republic',
-        coords: [37.13549, -93.45071],
-        name: "US 60 @ Republic",
-        state: "Missouri",
-        region: "southern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=e2336f3330889b7b16e1f38de85b019b&type=image&format=image.jpg"
-    },
-    {
-        id: 'ozark',
-        coords: [37.02377, -93.23699],
-        name: "MO 14 @ Ozark",
-        state: "Missouri",
-        region: "southern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=e90147fb04e57d51ae4dfa1f72371e99&type=image&format=image.jpg"
-    },
-    {
-        id: 'branson76',
-        coords: [36.63807, -93.27484],
-        name: "MO 76 @ Branson",
-        state: "Missouri",
-        region: "southern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=b693c644002650f965f6fff470025367&type=image&format=image.jpg"
-    },
-    {
-        id: 'kimberlingcity',
-        coords: [36.62808, -93.41216],
-        name: "Table Rock Lake @ Kimberling Marina",
-        state: "Missouri",
-        region: "southern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=b71e4ec47e8da62cc37c25a708a9a23d&type=image&format=image.jpg"
-    },
-    {
-        id: 'bransontablerock',
-        coords: [36.61119, -93.30648],
-        name: "Table Rock Lake @ Branson",
-        state: "Missouri",
-        region: "southern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=a9899406a2d399521e491678a0e72c51&type=image&format=image.jpg"
-    },
-    {
-        id: 'bullshoals',
-        coords: [36.47570, -92.92022],
-        name: "Bull Shoals Lake @ Diamond City",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=d5fc8f170583d3d23c3ba913c8789622&type=image&format=image.jpg"
-    },
-    {
-        id: 'downeureka',
-        coords: [36.40129, -93.73825],
-        name: "Downtown Eureka Springs",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=20fcde2e389248495ef1e4a0cb54e639&type=image&format=image.jpg"
-    },
-    {
-        id: 'mountainhome',
-        coords: [36.34206, -92.39660],
-        name: "Mountain Home (Baxter Medical)",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=f0351d2270be7647885c3d514dcf0f7d&type=image&format=image.jpg"
-    },
-    {
-        id: 'dwntownharrison',
-        coords: [36.23247, -93.10698],
-        name: "Downtown Harrison",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=94f1c8b1d1b310dbcd156f0ed38d3b0c&type=image&format=image.jpg"
-    },
-    // OzarksFirst Cameras
-    {
-        id: 'miamidownstream',
-        coords: [38.20594, -92.74822],
-        name: "Lake of the Ozarks @ Camden Resort",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=lakeozark&disabledownloadbutton=1"
-    },
-    {
-        id: 'ozarksport',
-        coords: [37.06088, -93.22617],
-        name: "Ozark (Ozark Mountain Sports Complex)",
-        state: "Missouri",
-        region: "southern",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=ozarksballpark&disabledownloadbutton=1"
-    },
-    {
-        id: 'miamidownstream',
-        coords: [37.00130, -94.62193],
-        name: "Miami (Downstream Casino)",
-        state: "Oklahoma",
-        region: "northern",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=downstream&disabledownloadbutton=1"
-    },
-    // News2 Oklahoma Cameras
-    {
-        id: 'shangrila',
-        coords: [36.55993, -94.83896],
-        name: "Grand O'Lakes (Shangri-La Resort)",
-        state: "Oklahoma",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://stream0072.cityvu.co/images/still.jpg"
-   },
-   {
-        id: 'shangrila',
-        coords: [36.46894, -95.04363],
-        name: "Grand O'Lakes (Pensacola Dam)",
-        state: "Oklahoma",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://stream0077.cityvu.co/images/still.jpg"
-   },
-   {
-        id: 'owasso',
-        coords: [36.27978, -95.80289],
-        name: "Owasso (Centennial Park)",
-        state: "Oklahoma",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://stream0065.cityvu.co/images/still.jpg"
-    },
-   {
-        id: 'tulsaint',
-        coords: [36.18393, -95.88768],
-        name: "Tulsa International Airport",
-        state: "Oklahoma",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://stream0076.cityvu.co/images/still.jpg"
-    },
-    {
-        id: 'tulsabok',
-        coords: [36.15513, -95.99056],
-        name: "Downtown Tulsa (BOK Tower)",
-        state: "Oklahoma",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://stream0063.cityvu.co/images/still.jpg"
-    },
-    {
-        id: 'brookside',
-        coords: [36.10967, -95.97544],
-        name: "Tulsa (Brookside)",
-        state: "Oklahoma",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://stream0069.cityvu.co/images/still.jpg"
-    },
-    {
-        id: 'news2tower',
-        coords: [36.10950, -95.97544],
-        name: "Tulsa (News2 Oklahoma Tower)",
-        state: "Oklahoma",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://stream0068.cityvu.co/images/still.jpg"
-    },
-    {
-        id: 'renaissance',
-        coords: [36.06469, -95.85821],
-        name: "Tulsa (Renaissance Center)",
-        state: "Oklahoma",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://stream0064.cityvu.co/images/still.jpg"
-    },
-    // FirstAlert4 Cameras
-    {
-        id: 'stpetersbarnesjewish',
-        coords: [38.79394, -90.57935],
-        name: "St. Peters (Barnes-Jewish Hospital)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kmov/weather/St_Peters.jpg"
-    },
-    {
-        id: 'siuedwardsville',
-        coords: [38.79378, -89.99656],
-        name: "Edwardsville (SIU Campus)",
-        state: "Illinois",
-        region: "southern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kmov/weather/SIU%20Edwardsville.jpg"
-    },
-    {
-        id: 'lambertsouthwest',
-        coords: [38.77652, -90.24035],
-        name: "St. Louis (Christian Hospital)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kmov/weather/North%20County_Spanish%20Lake.jpg"
-    },
-    {
-        id: 'lambertsouthwest',
-        coords: [38.73353, -90.34872],
-        name: "Lambert International (Terminal 2)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kmov/weather/airport.jpg"
-    },
-    {
-        id: 'ofallonprogress',
-        coords: [38.71540, -90.69869],
-        name: "O'Fallon (Progress West Hospital)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kmov/weather/Ofallon_Progress_West.jpg"
-    },
-    {
-        id: 'westport',
-        coords: [38.70197, -90.44708],
-        name: "St. Louis (Westport Plaza)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kmov/weather/westport.jpg"
-    },
-    {
-        id: 'stlouischildrens',
-        coords: [38.63791, -90.26460],
-        name: "St. Louis Children's Hospital",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kmov/weather/cwe_childrens.jpg"
-    },
-    {
-        id: 'barneshospital',
-        coords: [38.63535, -90.26484],
-        name: "Barnes Jewish Hospital",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kmov/weather/Barnes%20East.jpg"
-    },
-    {
-        id: 'stlouisbaptist',
-        coords: [38.63615, -90.44647],
-        name: "St. Louis (MO Baptist Medical Center)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kmov/weather/Mo%20Bapt.jpg"
-    },
-    {
-        id: 'hiltonballpark',
-        coords: [38.62500, -90.19073],
-        name: "Downtown St. Louis (Hilton Ballpark)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kmov/weather/360hilton.jpg"
-    },
-    {
-        id: 'hiltonballpark',
-        coords: [38.62500, -90.19073],
-        name: "Downtown St. Louis (Ballpark West)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kmov/weather/360whilton.jpg"
-    },
-    {
-        id: 'onecardinal',
-        coords: [38.62343, -90.19109],
-        name: "Downtown St. Louis (One Cardinal)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kmov/weather/WEB%20CTR%20One%20Cardinal%20Way.jpg"
-    },
-    {
-        id: 'eureka',
-        coords: [38.50719, -90.68006],
-        name: "Eureka (Holiday Inn Six Flags)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kmov/weather/eureka.jpg"
-    },
-    {
-        id: 'butlerhill',
-        coords: [38.48324, -90.35632],
-        name: "I-55 @ Butler Hill Rd (South St. Louis)",
-        state: "Missouri",
-        region: "central",
-        route: "I55",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kmov/weather/South%20County.jpg"
-    },
-    {
-        id: 'baptistsullivan',
-        coords: [38.19615, -91.17026],
-        name: "Sullivan (Missouri Baptist Hospital)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kmov/weather/Sullivan.jpg"
-    },
-  // KSDK Cameras
-   {
-        id: 'edwardsvillecleveland',
-        coords: [38.81161, -89.95581],
-        name: "Edwardsville (Cleveland Health)",
-        state: "Illinois",
-        region: "southern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=edf873d727f0630023fb76f435cf763c&type=image&format=image.jpg"
-   },
-   {
-        id: 'oldtownflorissant',
-        coords: [38.79647, -90.33418],
-        name: "Old Town Florissant",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=8cc1236564fc71dd121f03d1a3178a7b&type=image&format=image.jpg"
-    },
-    {
-        id: 'stcharlesdown',
-        coords: [38.77974, -90.48197],
-        name: "St. Charles (Historical Downtown)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=a4ceba0667cc516e264eece0caa0b508&type=image&format=image.jpg"
-    },
-    {
-        id: 'chesterfield',
-        coords: [38.65247, -90.56083],
-        name: "Chesterfield (Drury Plaza)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=2dc3c001ceec9118998247266e6af1f3&type=image&format=image.jpg"
-    },
-    {
-        id: 'stlouisbotanical',
-        coords: [38.64274, -90.26466],
-        name: "St. Louis (Forest Park)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=03224dc411fe7e5ffd2d81eb5fe689dd&type=image&format=image.jpg"
-    },
-    {
-        id: 'stlouisbotanical',
-        coords: [38.61394, -90.25723],
-        name: "St. Louis (Botanical Garden)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=5718829f71b02996ff269b4c59687442&type=image&format=image.jpg"
-    },
-    {
-        id: 'kirkwoodfarmer',
-        coords: [38.58083, -90.40453],
-        name: "Kirkwood (Farmer's Market)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=135e4f36feff282afcc00a1abdd58fb7&type=image&format=image.jpg"
-    },
-    {
-        id: 'ofallondrury',
-        coords: [38.57406, -89.93013],
-        name: "O'Fallon (Drury Inn)",
-        state: "Illinois",
-        region: "southern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=97a6631c2321bfd296cbf3febeea8321&type=image&format=image.jpg"
-   },
-   {
-        id: 'arnolddrury',
-        coords: [38.44432, -90.37744],
-        name: "Arnold (Drury Inn)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://api.wetmet.net/widgets/image/frame.php?uid=bc34ef3137c34fe22a66fb2cb83a6688&type=image&format=image.jpg"
-    },
-    // KFOR Network
-    {
-        id: 'stillwaterosu',
-        coords: [36.12146, -97.06909],
-        name: "Stillwater (Oklahoma State Uni.)",
-        state: "Oklahoma",
-        region: "northern",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=63bc7178d67f4&disabledownloadbutton=1"
-    },
-    {
-        id: 'dwntwnguthrie',
-        coords: [35.87817, -97.42774],
-        name: "Downtown Guthrie",
-        state: "Oklahoma",
-        region: "northern",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=63bc70b59a4de&disabledownloadbutton=1"
-    },
-    {
-        id: 'weatherford',
-        coords: [35.54431, -98.67007],
-        name: "Weatherford (Space & Air Museum)",
-        state: "Oklahoma",
-        region: "central",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=63bc6fda00b3b&disabledownloadbutton=1"
-    },
-    {
-        id: 'okcskyline',
-        coords: [35.46017, -97.50702],
-        name: "Downtown Oklahoma City",
-        state: "Oklahoma",
-        region: "central",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=63bc6f8d7d9f4&disabledownloadbutton=1"
-    },
-    // KCTV 5 Cameras
-    {
-        id: 'kansascitybriaircliff',
-        coords: [39.15764, -94.58147],
-        name: "Kansas City (Briarcliff)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kctv/weather/Briarcliff%20Hilltop.jpg"
-    },
-    {
-        id: 'kansascityspeedway',
-        coords: [39.12405, -94.81981],
-        name: "Kansas City (Kansas Speedway)",
-        state: "Kansas",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kctv/weather/NFM.jpg"
-    },
-    {
-        id: 'kansascitydowntown',
-        coords: [39.09779, -94.58772],
-        name: "Downtown Kansas City",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kctv/weather/State%20Street.jpg"
-    },
-    {
-        id: 'kansascityturmancomplex',
-        coords: [39.05625, -94.48745],
-        name: "Kansas City (Truman Complex)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kctv/weather/Stadium.jpg"
-    },
-    {
-        id: 'shawneeadvent',
-        coords: [38.99547, -94.69193],
-        name: "Shawnee (AdventHealth Mission)",
-        state: "Kansas",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kctv/weather/AdventHealth.jpg"
-    },
-    {
-        id: 'kansascityoraclecerner',
-        coords: [38.95953, -94.51658],
-        name: "Kansas City (Orcale Cerner)",
-        state: "Missouri",
-        region: "central",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kctv/weather/Cerner.jpg"
-    },
-    // KSN Network
-    {
-        id: 'colby',
-        coords: [39.36317, -101.04322],
-        name: "Colby",
-        state: "Kansas",
-        region: "northern",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=skyviewcolby&disabledownloadbutton=1"
-    },
-    {
-        id: 'hays',
-        coords: [38.87287, -99.32958],
-        name: "Downtown Hays",
-        state: "Kansas",
-        region: "northern",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=skyviewhays&disabledownloadbutton=1"
-    },
-    {
-        id: 'greatbend',
-        coords: [38.36266, -98.76412],
-        name: "Great Bend",
-        state: "Kansas",
-        region: "central",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=skyviewgreatbend&disabledownloadbutton=1"
-    },
-    {
-        id: 'hutchinson',
-        coords: [38.05050, -97.93585],
-        name: "Hutchinson",
-        state: "Kansas",
-        region: "central",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=skyviewhutchinson&disabledownloadbutton=1"
-    },
-    {
-        id: 'gardencity',
-        coords: [37.96484, -100.85539],
-        name: "Garden City",
-        state: "Kansas",
-        region: "central",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=skyviewgardencity&disabledownloadbutton=1"
-    },
-    {
-        id: 'dodgecity',
-        coords: [37.75233, -100.02518],
-        name: "Dodge City",
-        state: "Kansas",
-        region: "southern",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=skyviewdodgecity&disabledownloadbutton=1"
-    },
-    {
-        id: 'wichitapbs',
-        coords: [37.74305, -97.23551],
-        name: "Wichita (PBS Kansas)",
-        state: "Kansas",
-        region: "southern",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=skyviewwichitane&disabledownloadbutton=1"
-    },
-    {
-        id: 'downtownwichita',
-        coords: [37.68646, -97.34228],
-        name: "Downtown Wichita",
-        state: "Kansas",
-        region: "southern",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=skyviewwichita&disabledownloadbutton=1"
-    },
-    {
-        id: 'pratt',
-        coords: [37.64616, -98.73038],
-        name: "Pratt",
-        state: "Kansas",
-        region: "southern",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=skyviewpratt&disabledownloadbutton=1"
-    },
-    // KSNT News Network
-    {
-        id: 'holton',
-        coords: [39.45643, -95.74685],
-        name: "Holton",
-        state: "Kansas",
-        region: "northern",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=6086ddb96f17e&disabledownloadbutton=1"
-    },
-    {
-        id: 'claycenter',
-        coords: [39.38139, -97.16864],
-        name: "Clay Center",
-        state: "Kansas",
-        region: "northern",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=610d7b2ddf98f&disabledownloadbutton=1"
-    },
-    {
-        id: 'mayettacasino',
-        coords: [39.31776, -95.75093],
-        name: "Mayetta (Prairie Band Casino)",
-        state: "Kansas",
-        region: "northern",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=5ad893980cb1a&disabledownloadbutton=1"
-    },
-    {
-        id: 'manhattanwine',
-        coords: [39.19315, -96.67829],
-        name: "Manhattan (Liquid Art Winery)",
-        state: "Kansas",
-        region: "northern",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=66e19a3c8f47f&disabledownloadbutton=1"
-    },
-    {
-        id: 'dwntwnmanhattan',
-        coords: [39.18176, -96.56301],
-        name: "Downtown Manhattan",
-        state: "Kansas",
-        region: "northern",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=5ace5ac028bd8&disabledownloadbutton=1"
-    },
-    {
-        id: 'junctioncity',
-        coords: [39.02840, -96.82999],
-        name: "Junction City",
-        state: "Kansas",
-        region: "central",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=5b8562bfabc26&disabledownloadbutton=1"
-    },
-    {
-        id: 'corefirsttopeka',
-        coords: [39.05590, -95.75655],
-        name: "Topeka (Corefirst Bank)",
-        state: "Kansas",
-        region: "central",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=5ad64dfb68455&disabledownloadbutton=1"
-    },
-    {
-        id: 'dwntwntopeka',
-        coords: [39.03541, -95.68484],
-        name: "Downtown Topeka",
-        state: "Kansas",
-        region: "central",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=5ace5b0179fdf&disabledownloadbutton=1"
-    },
-    {
-        id: 'lawrenceunikansas',
-        coords: [38.96320, -95.24384],
-        name: "Lawrence (Univeristy of Kansas)",
-        state: "Kansas",
-        region: "central",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=5c7585e26c233&disabledownloadbutton=1"
-    },
-    {
-        id: 'emporiastate',
-        coords: [38.41728, -96.18035],
-        name: "Emporia (Emporia State University)",
-        state: "Kansas",
-        region: "central",
-        route: "none",
-        type: "iframe",
-        network: "news",
-        src: "https://g1.ipcamlive.com/player/player.php?alias=5b6d942bce5f2&disabledownloadbutton=1"
-    },
-    // K8 News Network
-    {
-        id: 'hardy',
-        coords: [36.31540, -91.48472],
-        name: "Hardy",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.raycommedia.com/kait/rwimages/hardy.jpg"
-    },
-    {
-        id: 'pocahontas',
-        coords: [36.23981, -90.95122],
-        name: "Pocahontas",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kait/rwimages/brtc.jpg"
-    },
-    {
-        id: 'paragould',
-        coords: [36.05175, -90.49844],
-        name: "Paragould",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kait/rwimages/ammc.jpg"
-    },
-    {
-        id: 'walnutridge',
-        coords: [36.06923, -90.95676],
-        name: "Walnut Ridge",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kait/rwimages/WalnutRidge.jpg"
-    },
-    {
-        id: 'jonesborohospital',
-        coords: [35.86671, -90.63650],
-        name: "Jonesboro (NEA Baptist Memorial)",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kait/rwimages/neab.jpg"
-    },
-    {
-        id: 'jonesboroastate',
-        coords: [35.84850, -90.66817],
-        name: "Jonesboro (Centennial Bank Stadium)",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kait/rwimages/stadium.jpg"
-    },
-    {
-        id: 'jonesborobaptist',
-        coords: [35.79947, -90.69443],
-        name: "Jonesboro (Central Baptist Church)",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kait/rwimages/centralbap.jpg"
-    },
-    {
-        id: 'batesvillemarkmartin',
-        coords: [35.71354, -91.63168],
-        name: "Batesville (Mark Martin Ford)",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.gray.tv/kait/rwimages/bates.jpg"
-    },
-    {
-        id: 'newport',
-        coords: [35.64167, -91.24071],
-        name: "Newport",
-        state: "Arkansas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://webpubcontent.raycommedia.com/kait/rwimages/newport.jpg"
-    },
-    // FOX14 News Network
-    {
-        id: 'dwntwnamarillo',
-        coords: [35.20340, -101.83459],
-        name: "Downtown Amarillo",
-        state: "Texas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://streamer4.brownrice.com/cam-images/txamatowercam1.jpg"
-    },
-    {
-        id: 'southamarillo',
-        coords: [35.15311, -101.87996],
-        name: "South Amarillo",
-        state: "Texas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://live4.brownrice.com/cam-images/txamatowercam2.jpg"
-    },
-    {
-        id: 'clarendon',
-        coords: [34.94005, -100.89750],
-        name: "Clarendon",
-        state: "Texas",
-        region: "northern",
-        route: "none",
-        type: "image",
-        network: "news",
-        src: "https://live4.brownrice.com/cam-images/txamatowercam6.jpg"
-    },
-  ];
-
-  let lastUpdated = new Date();
-
+<script> 
   const warningColors = {
         "Tsunami Warning": "#FD6347",
         "Tornado Warning": "#FF0000",
@@ -3808,7 +236,7 @@ const cameras = [
         "Lakeshore Flood Warning": "#228B22",
         "Ashfall Advisory": "#696969",
         "High Surf Warning": "#228B22",
-        "Excessive Heat Warning": "#C71585",
+        "Extreme Heat Warning": "#C71585",
         "Tornado Watch": "#FFFF00",
         "Severe Thunderstorm Watch": "#DB7093",
         "Flash Flood Watch": "#2E8B57",
@@ -3824,6 +252,7 @@ const cameras = [
         "Tropical Storm Watch": "#F08080",
         "Storm Watch": "#FFE4B5",
         "Tropical Cyclone Local Statement": "#FFE4B5",
+        "Tropical Cyclone Statement": "#FFE4B5",
         "Winter Weather Advisory": "#7B68EE",
         "Avalanche Advisory": "#CD853F",
         "Cold Weather Advisory": "#AFEEEE",
@@ -3857,7 +286,7 @@ const cameras = [
         "Coastal Flood Watch": "#66CDAA",
         "Lakeshore Flood Watch": "#66CDAA",
         "High Wind Watch": "#B8860B",
-        "Excessive Heat Watch": "#800000",
+        "Extreme Heat Watch": "#800000",
         "Extreme Cold Watch": "#5F9EA0",
         "Freeze Watch": "#00FFFF",
         "Fire Weather Watch": "#FFDEAD",
@@ -3877,6 +306,14 @@ const cameras = [
 };
 
 let warningPolygons = [];
+let usCountyGeoJson = null;
+let cachedCanadianAlerts = {};
+
+fetch("https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json")
+  .then((res) => res.json())
+  .then((data) => {
+    usCountyGeoJson = data;
+  });
 
 async function fetchWarnings() {
   try {
@@ -3901,17 +338,10 @@ async function fetchWarnings() {
     const regularWarnings = [];
 
     validWarnings.forEach((warning) => {
-      if (
-        warning.properties.description &&
-        (warning.properties.description.includes("FLASH FLOOD EMERGENCY") ||
-         warning.properties.description.includes("TORNADO EMERGENCY"))
-      ) {
+      const desc = warning.properties.description || "";
+      if (desc.includes("FLASH FLOOD EMERGENCY") || desc.includes("TORNADO EMERGENCY")) {
         emergencyWarnings.push(warning);
-      } else if (
-        warning.properties.description &&
-        (warning.properties.description.includes("DESTRUCTIVE STORMS") ||
-         warning.properties.description.includes("DESTRUCTIVE STORM"))
-      ) {
+      } else if (desc.includes("DESTRUCTIVE STORMS") || desc.includes("DESTRUCTIVE STORM")) {
         destructiveWarnings.push(warning);
       } else {
         regularWarnings.push(warning);
@@ -3926,34 +356,48 @@ async function fetchWarnings() {
       ...emergencyWarnings,
     ];
 
-    displayWarningsOnMap(
-      sortedWarnings,
-      emergencyWarnings,
-      destructiveWarnings
-    );
+    if (!usCountyGeoJson) {
+      console.warn("County geojson not ready yet.");
+      return;
+    }
+
+    displayWarningsOnMap(sortedWarnings, emergencyWarnings, destructiveWarnings);
   } catch (error) {
     console.error("Error fetching warnings:", error);
   }
 }
 
-function displayWarningsOnMap(
-  warnings,
-  emergencyWarnings,
-  destructiveWarnings
-) {
-  // Remove previous polygons only (not radar or markers)
+function displayWarningsOnMap(warnings, emergencyWarnings, destructiveWarnings) {
   warningPolygons.forEach(p => map.removeLayer(p));
   warningPolygons = [];
 
+  if (!map.getPane("fallbackPolygons")) {
+    map.createPane("fallbackPolygons");
+    map.getPane("fallbackPolygons").style.zIndex = 300;
+  }
+
   warnings.forEach((warning) => {
-    if (warning.geometry && warning.geometry.type === "Polygon") {
-      const coordinates = warning.geometry.coordinates[0].map((coord) => [
+    const expires = new Date(warning.properties.expires);
+    const fipsCodes = (warning.properties.geocode?.SAME || []).map(c =>
+      c.padStart(5, "0").slice(-5)
+    );
+
+    function getTimeRemaining() {
+      const now = new Date();
+      const timeLeft = expires - now;
+      if (timeLeft <= 0) return "Expired";
+      const minutes = Math.floor((timeLeft / 1000 / 60) % 60);
+      const hours = Math.floor(timeLeft / 1000 / 60 / 60);
+      return `${hours}h ${minutes}m`;
+    }
+
+    if (warning.geometry?.type === "Polygon") {
+      const coordinates = warning.geometry.coordinates[0].map(coord => [
         coord[1],
         coord[0],
       ]);
 
-      let color =
-        warningColors[warning.properties.event] || warningColors.Default;
+      let color = warningColors[warning.properties.event] || warningColors.Default;
       let weight = 4;
       let className = "";
 
@@ -3967,69 +411,79 @@ function displayWarningsOnMap(
         className = "destructive";
       }
 
-      const expires = new Date(warning.properties.expires);
-      function getTimeRemaining() {
-        const now = new Date();
-        const timeLeft = expires - now;
-        if (timeLeft <= 0) return "Expired";
-        const minutes = Math.floor((timeLeft / 1000 / 60) % 60);
-        const hours = Math.floor(timeLeft / 1000 / 60 / 60);
-        return `${hours}h ${minutes}m`;
-      }
-
       const polygon = L.polygon(coordinates, {
-        color: color,
-        weight: weight,
+        color,
+        weight,
         opacity: 1,
         fillOpacity: 0.45,
-        className: className,
-      })
-        .bindPopup(
-          () => `
+        className
+      }).bindPopup(`
         <strong>Event:</strong> ${warning.properties.event}<br>
         <strong>Sender:</strong> ${warning.properties.senderName || "N/A"}<br>
         <strong>Area(s):</strong> ${warning.properties.areaDesc || "N/A"}<br>
         <strong>Sent:</strong> ${new Date(warning.properties.sent).toLocaleString()}<br>
-        <strong>Expires:</strong> ${new Date(warning.properties.expires).toLocaleString()}<br>
+        <strong>Expires:</strong> ${expires.toLocaleString()}<br>
         <strong>Time Remaining:</strong> ${getTimeRemaining()}<br>
-      `
-        )
-        .addTo(map);
+      `);
 
+      polygon.addTo(map);
+      if (className) polygon.bringToFront();
       warningPolygons.push(polygon);
 
-      // Bring to front if emergency/destructive
-      if (
-        emergencyWarnings.includes(warning) ||
-        destructiveWarnings.includes(warning)
-      ) {
-        polygon.bringToFront();
-      }
+    } else if (fipsCodes.length && usCountyGeoJson) {
+      const fallbackColor = warningColors[warning.properties.event] || "#999";
+
+      usCountyGeoJson.features.forEach(feature => {
+        if (fipsCodes.includes(feature.id)) {
+          const geom = feature.geometry;
+          const polys = geom.type === "Polygon" ? [geom.coordinates] : geom.coordinates;
+
+          polys.forEach(p => {
+            const latlngs = p[0].map(coord => [coord[1], coord[0]]);
+            const polygon = L.polygon(latlngs, {
+              color: fallbackColor,
+              weight: 3,
+              opacity: 0.65,
+              fillOpacity: 0.25,
+              pane: "fallbackPolygons"
+            }).bindPopup(`
+              <strong>Event:</strong> ${warning.properties.event}<br>
+              <strong>Sender:</strong> ${warning.properties.senderName || "N/A"}<br>
+              <strong>Area(s):</strong> ${warning.properties.areaDesc || "N/A"}<br>
+              <strong>Sent:</strong> ${new Date(warning.properties.sent).toLocaleString()}<br>
+              <strong>Expires:</strong> ${expires.toLocaleString()}<br>
+            `);
+
+            polygon.addTo(map);
+            warningPolygons.push(polygon);
+          });
+        }
+      });
     }
   });
-
-  // Make sure camera markers are always on top
-  if (typeof markerCluster !== "undefined") {
-    markerCluster.bringToFront();
-  }
-  // Radar stays below warnings (already added first)
 }
 
-fetchWarnings();
-setInterval(fetchWarnings, 10000);
-
 const map = L.map('map').setView([36.3, -94.4], 7);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+L.tileLayer('https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '© OpenStreetMap'
 }).addTo(map);
 
+fetchWarnings();
+setInterval(fetchWarnings, 10000);
+
+// Create a custom pane for radar
+map.createPane('radarPane');
+map.getPane('radarPane').style.zIndex = 300;
+
+// Add radar layer to the radarPane
 let radarLayer = L.tileLayer
   .wms("https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q.cgi?", {
     layers: "nexrad-n0q-900913",
     format: "image/png",
     transparent: true,
     attribution: "Iowa Environmental Mesonet",
+    pane: "radarPane" // <-- assign to radarPane
   })
   .addTo(map);
 
@@ -4043,6 +497,7 @@ function refreshRadarLayer() {
         format: "image/png",
         transparent: true,
         attribution: "Iowa Environmental Mesonet",
+        pane: "radarPane" // <-- assign to radarPane
       }
     )
     .addTo(map);
@@ -4064,6 +519,46 @@ async function conditionalRefreshRadarLayer() {
 
 setInterval(conditionalRefreshRadarLayer, 60000); // Check every 60 seconds
 
+const PROXY_BASE = '';
+let cameras = [];
+let lastUpdated = new Date();
+
+fetch('cameras.json')
+  .then(res => res.json())
+  .then(data => {
+    cameras = data.filter(cam => {
+    return !('_comment' in cam) && cam.id && cam.coords && cam.coords.length === 2;
+  });
+  
+    console.log('Loaded cameras:', cameras.length);
+
+    cameras.forEach(cam => {
+      if (!cam.coords || cam.coords.length !== 2) return;
+
+      const marker = L.marker(cam.coords, { icon: cameraIcon });
+      const src = cam.src || getImageUrl(cam.id);
+
+      const popupContent =
+        cam.type === 'image'
+          ? `<strong>${cam.name}</strong><br><img src="${src}" width="300">`
+          : cam.type === 'iframe'
+            ? `<strong>${cam.name}</strong><br><iframe src="${cam.src}" width="300" height="200" frameborder="0" allowfullscreen></iframe>`
+            : `<strong>${cam.name}</strong><br><video width="300" src="${cam.src}" autoplay muted loop></video>`;
+
+      marker.bindPopup(popupContent);
+      markerCluster.addLayer(marker);
+    });
+
+    map.addLayer(markerCluster);
+
+  // Make sure camera markers are always on top
+  if (typeof markerCluster !== "undefined") {
+    markerCluster.bringToFront();
+  }
+
+    updateCameraGrid();
+  });
+
 const cameraIcon = L.icon({
   iconUrl: 'https://cdn-icons-png.flaticon.com/512/66/66843.png',
   iconSize: [30, 30],
@@ -4073,7 +568,7 @@ const cameraIcon = L.icon({
 const markerCluster = L.markerClusterGroup();
 
 function getImageUrl(id) {
-  return `https://actis.idrivearkansas.com/index.php/api/cameras/image?camera=${id}&ts=${Date.now()}`;
+  return `https://actis.idrivearkansas.com/index.php/api/cameras/image?camera=${id}`;
 }
 
 function buildCameraBox(cam) {
@@ -4081,21 +576,27 @@ function buildCameraBox(cam) {
   box.className = 'camera-box';
   box.setAttribute('data-state', cam.state);
   box.setAttribute('data-route', cam.route);
-  let media;
+
+  let media, src;
+
   if (cam.type === 'image') {
-    const src = cam.src || getImageUrl(cam.id);
+    src = cam.src || getImageUrl(cam.id);
     media = `<img id="img-${cam.id}" src="${src}" alt="${cam.name}" onclick="showModal(this.src)">`;
   } else if (cam.type === 'iframe') {
-    media = `<iframe src="${cam.src}" width="300" height="200" frameborder="0" allowfullscreen></iframe>`;
+    src = cam.proxy ? PROXY_BASE + encodeURIComponent(cam.rawSrc) : cam.src;
+    media = `<iframe src="${src}" width="300" height="200" frameborder="0" allowfullscreen></iframe>`;
   } else {
-    media = `<video controls autoplay muted loop src="${cam.src}" onclick="event.stopPropagation(); showModalVideo(this.src)"></video>`;
+    src = cam.proxy ? PROXY_BASE + encodeURIComponent(cam.rawSrc) : cam.src;
+    media = `<video id="vid-${cam.id}" controls autoplay muted loop src="${src}" onclick="event.stopPropagation(); showModalVideo(this.src)"></video>`;
   }
+
   box.innerHTML = `
     <div class="camera-name">${cam.name}</div>
     <div class="coords">${cam.coords.map(c => c.toFixed(5)).join(', ')}</div>
     ${media}
     <div class="timestamp" id="ts-${cam.id}">Updated: ${lastUpdated.toLocaleTimeString()}</div>
   `;
+  
   return box;
 }
 
@@ -4125,28 +626,17 @@ function showModalVideo(src) {
   modal.style.display = 'flex';
 }
 
-// Markers
-cameras.forEach(cam => {
-  const marker = L.marker(cam.coords, { icon: cameraIcon });
-  const src = cam.src || getImageUrl(cam.id);
-  const popupContent =
-    cam.type === 'image'
-      ? `<strong>${cam.name}</strong><br><img src="${src}" width="300">`
-      : cam.type === 'iframe'
-        ? `<strong>${cam.name}</strong><br><iframe src="${cam.src}" width="300" height="200" frameborder="0" allowfullscreen></iframe>`
-        : `<strong>${cam.name}</strong><br><video width="300" src="${cam.src}" autoplay muted loop></video>`;
-  marker.bindPopup(popupContent);
-  markerCluster.addLayer(marker);
-});
-map.addLayer(markerCluster);
-
 // Update images every 30s
 setInterval(() => {
   lastUpdated = new Date();
   cameras.forEach(cam => {
-    if (cam.type === 'image' && !cam.src) {
+    if (cam.type === 'image') {
       const img = document.getElementById(`img-${cam.id}`);
-      if (img) img.src = getImageUrl(cam.id);
+      if (img) {
+        const src = cam.src || getImageUrl(cam.id);
+        img.src = `${src}${src.includes('?') ? '&' : '?'}t=${Date.now()}`;
+        console.log(`Updated ${cam.id} at ${lastUpdated.toLocaleTimeString()}`);
+      }
     }
     const ts = document.getElementById(`ts-${cam.id}`);
     if (ts) ts.textContent = `Updated: ${lastUpdated.toLocaleTimeString()}`;
@@ -4163,6 +653,162 @@ updateCameraGrid();
 document.getElementById('homeBtn').addEventListener('click', function() {
   window.location.href = 'index.html';
 });
+
+// --- RealEarth Layers Section ---
+
+// Create a custom pane for RealEarth layers (once, after map is created)
+map.createPane('realEarthPane');
+map.getPane('realEarthPane').style.zIndex = 200; // Above base tiles, below overlays
+
+// Create a custom pane for ProbSevere above all others
+map.createPane('probSeverePane');
+map.getPane('probSeverePane').style.zIndex = 400; // Above other overlays
+
+// Helper to create and style RealEarth GeoJSON layers
+function createRealEarthLayer(url, paneName = 'realEarthPane') {
+  const layer = L.layerGroup();
+  layer._realEarthUrl = url;
+  layer._geoJsonLayer = null;
+
+  async function loadData() {
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (layer._geoJsonLayer) {
+        layer.removeLayer(layer._geoJsonLayer);
+      }
+
+      layer._geoJsonLayer = L.geoJSON(data, {
+        pane: paneName, // Use the specified pane
+        style: feature => ({
+          color: rgbString(feature.properties.BCOLOR) || rgbString(feature.properties.COLOR) || '#00bfff',
+          weight: 2,
+          opacity: (feature.properties.BOPACITY ?? 100) / 100,
+          fillColor: rgbString(feature.properties.COLOR) || rgbString(feature.properties.BCOLOR) || '#00bfff',
+          fillOpacity: (feature.properties.OPACITY ?? 50) / 100
+        }),
+        onEachFeature: (feature, layerObj) => {
+          const title = feature.properties.PRODUCT || feature.properties.RE_PRODUCT_NAME || 'Layer';
+          const desc = feature.properties.INFO || feature.properties.RE_TOOLTIP || feature.properties.OUTLOOK || '';
+          layerObj.bindPopup(
+            `<strong>${title}</strong><br>${desc}`
+          );
+        }
+      });
+      layer._geoJsonLayer.addTo(layer);
+    } catch (e) {
+      console.error('Failed to load RealEarth layer:', url, e);
+    }
+  }
+
+  layer._refresh = loadData;
+  loadData();
+  return layer;
+}
+
+// Define layers and their names/URLs
+const realEarthLayers = [
+  {
+    name: 'Tropical Weather Forecast',
+    url: 'https://realearth.ssec.wisc.edu/api/shapes?products=TSFCST'
+  },
+  {
+    name: 'Excessive Rain Outlook',
+    url: 'https://realearth.ssec.wisc.edu/api/shapes?products=WPC-ExcessiveRain'
+  },
+  {
+    name: 'Winter Storm Severity Index',
+    url: 'https://realearth.ssec.wisc.edu/api/shapes?products=WPC-WSSI'
+  },
+  // ProbSevere will be handled separately
+  {
+    name: 'SPC Convective Outlook Day 1',
+    url: 'https://realearth.ssec.wisc.edu/api/shapes?products=SPCcoday1'
+  }
+];
+
+// Create layers (excluding ProbSevere)
+const realEarthLayerObjs = realEarthLayers.map(l => ({
+  name: l.name,
+  layer: createRealEarthLayer(l.url)
+}));
+
+// Create ProbSevere layer separately, using the dedicated pane
+const probSevereLayerObj = {
+  name: 'ProbSevere',
+  layer: createRealEarthLayer('https://realearth.ssec.wisc.edu/api/shapes?products=PROBSEVEREV3', 'probSeverePane')
+};
+
+// Add toggles to a Leaflet control on the map
+const realEarthControl = L.control({ position: 'bottomleft' });
+
+realEarthControl.onAdd = function(map) {
+  const div = L.DomUtil.create('div', 'realearth-key');
+  div.style.background = '#222';
+  div.style.color = '#fff';
+  div.style.padding = '1em';
+  div.style.borderRadius = '8px';
+  div.style.boxShadow = '0 2px 8px rgba(0,0,0,0.5)';
+  div.style.fontSize = '1em';
+  div.style.maxWidth = '300px';
+  div.innerHTML = `<strong>Layers</strong><br>`;
+  realEarthLayerObjs.forEach((obj, i) => {
+    const id = `realEarthToggle${i}`;
+    div.innerHTML += `<label style="display:block; margin:0.5em 0;">
+      <input type="checkbox" id="${id}"> ${obj.name}
+    </label>`;
+  });
+  // ProbSevere toggle
+  div.innerHTML += `<label style="display:block; margin:0.5em 0;">
+    <input type="checkbox" id="probSevereToggle"> ${probSevereLayerObj.name}
+  </label>`;
+  return div;
+};
+realEarthControl.addTo(map);
+
+// Attach event listeners after control is added
+setTimeout(() => {
+  realEarthLayerObjs.forEach((obj, i) => {
+    document.getElementById(`realEarthToggle${i}`).addEventListener('change', function(e) {
+      if (e.target.checked) {
+        obj.layer.addTo(map);
+      } else {
+        map.removeLayer(obj.layer);
+      }
+    });
+  });
+  // ProbSevere toggle
+  document.getElementById('probSevereToggle').addEventListener('change', function(e) {
+    if (e.target.checked) {
+      probSevereLayerObj.layer.addTo(map);
+    } else {
+      map.removeLayer(probSevereLayerObj.layer);
+    }
+  });
+}, 0);
+
+// Refresh RealEarth layers every 5 minutes
+setInterval(() => {
+  realEarthLayerObjs.forEach(obj => {
+    obj.layer._refresh();
+  });
+}, 300000); // 5 minutes
+
+// Refresh ProbSevere every minute
+setInterval(() => {
+  probSevereLayerObj.layer._refresh();
+}, 60000); // 1 minute
+
+// Helper function to convert "0 255 0" to "#00ff00"
+function rgbString(rgb) {
+  if (!rgb) return null;
+  if (typeof rgb === "string" && rgb.match(/^\d+\s+\d+\s+\d+$/)) {
+    const [r, g, b] = rgb.split(' ').map(Number);
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+  }
+  return rgb;
+}
 </script>
 </body>
 </html>
