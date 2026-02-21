@@ -230,7 +230,7 @@
         const dbz = Number(p.max_dbz) || 0;
         const top = Number(p.top) || 0;
 
-        const base = (posh * 24 + poh + size * 5 + dbz) / 6;
+        const base = (posh * 12 + poh * 1.2 + size * 6 + dbz * 0.18) / 5;
         const vil_factor =
           vil < 15 ? 0.5 : vil <= 29 ? 0.75 : vil <= 49 ? 1.25 : 1.75;
         const et_factor =
@@ -248,9 +248,10 @@
             ? 0.15
             : 0.1;
 
-        const enhanced = base * vil_factor * et_factor;
-        const tornado_factor = (tvs + meso * 1.35) * 5;
+        const enhanced = base * (0.6 + vil_factor * 0.4) * (0.7 + et_factor * 0.3);
+        const tornado_factor = (tvs ? 25 : 0) + meso * 2.5;
         const total = enhanced + tornado_factor;
+        const longevityBase = et_factor * 0.7 + vil_factor * 0.3;
 
         const longevity = {
           0.15: [35, 10, 5],
@@ -259,7 +260,7 @@
           1: [95, 75, 50],
           1.5: [100, 95, 75],
           2: [100, 100, 95],
-        }[et_factor] || [10, 5, 1];
+        }[longevityBase] || [10, 5, 1];
 
         return {
           total_intensity: Number(total.toFixed(2)),
