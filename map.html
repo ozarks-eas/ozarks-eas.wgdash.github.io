@@ -13,46 +13,71 @@
       background-color: #121212;
       color: #f0f0f0;
       font-family: Arial, sans-serif;
+      font-size: 1em;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
     }
     .section-title {
       margin: 0;
-      padding: 1em 1em 0 1em;
-      font-size: 1.4em;
+      padding: 1em 1em 0.5em 1em;
+      font-size: 1.5em;
       font-weight: bold;
       color: #f0f0f0;
       background-color: #1e1e1e;
+      text-align: center;
     }
     #controls {
       display: flex;
       flex-wrap: wrap;
       gap: 1em;
-      padding: 1em;
+      padding: 0.5em 1em;
       background: #1e1e1e;
+      justify-content: center;
     }
     select {
       background: #333;
       color: #fff;
       border: none;
       padding: 0.5em;
+      font-size: 1em;
+      border-radius: 4px;
+    }
+    button {
+      background: #333;
+      color: #fff;
+      border: none;
+      padding: 0.5em 1em;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1em;
+    }
+    .main-content {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
     }
     #map {
-      width: 100%;
-      height: 100vh;
+      width: 60%;
+      height: 100%;
     }
     .camera-grid {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      padding: 1em;
+      width: 40%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 1em;
+      padding: 1em;
       background-color: #121212;
+      overflow-y: auto;
     }
     .camera-box {
       background-color: #1e1e1e;
-      border: 1px solid #333;
+      border: 2px solid #333;
       padding: 1em;
       border-radius: 8px;
-      width: 320px;
       text-align: center;
       box-shadow: 0 0 8px rgba(0,0,0,0.6);
     }
@@ -64,7 +89,7 @@
     }
     .camera-name {
       font-weight: bold;
-      font-size: 1.1em;
+      font-size: 1em;
       margin-bottom: 0.5em;
     }
     .coords {
@@ -83,14 +108,15 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.9);
       justify-content: center;
       align-items: center;
       z-index: 1000;
     }
     .modal img, .modal video {
-      max-width: 90%;
-      max-height: 90%;
+      max-width: 95%;
+      max-height: 95%;
+      border-radius: 8px;
     }
       @keyframes pulse {
       0% { stroke-width: 2px; }
@@ -106,25 +132,111 @@
       stroke: #ffb833 !important;
     }
 
+    @media (min-width: 1920px) {
+      body {
+        font-size: 1.2em;
+      }
+      .section-title {
+        font-size: 1.8em;
+      }
+      .camera-name {
+        font-size: 1.2em;
+      }
+    }
+
+    @media (min-width: 2560px) {
+      body {
+        font-size: 1.5em;
+      }
+      .section-title {
+        font-size: 2.2em;
+      }
+      .camera-name {
+        font-size: 1.5em;
+      }
+    }
+
+    .layers-menu {
+      background: #1e1e1e;
+      border-left: 1px solid #333;
+      padding: 0.5em 1em;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1em;
+      align-items: center;
+    }
+
+    .layers-menu label {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      margin: 0;
+    }
+
+    .layers-menu input[type="checkbox"] {
+      cursor: pointer;
+    }
+
+    /* Dark mode styling for Leaflet popups */
+    .leaflet-popup-content-wrapper {
+      background-color: #1e1e1e;
+      color: #f0f0f0;
+      border: 1px solid #333;
+      border-radius: 4px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.8);
+    }
+
+    .leaflet-popup-content {
+      color: #f0f0f0;
+      font-family: Arial, sans-serif;
+    }
+
+    .leaflet-popup-content strong {
+      color: #fff;
+    }
+
+    .leaflet-popup-tip {
+      background-color: #1e1e1e;
+      border-top-color: #333;
+    }
+
+    .leaflet-popup-close-button {
+      color: #f0f0f0;
+    }
+
+    .leaflet-popup-close-button:hover {
+      color: #fff;
+    }
+
   </style>
 </head>
 <body>
-<h2 class="section-title">Weather Alerts & Cameras Viewer</h2>
+<h2 class="section-title">Road Conditions & Weather Viewer</h2>
 <div id="controls">
   <button id="homeBtn" style="background:#333;color:#fff;border:none;padding:0.5em 1em;border-radius:4px;cursor:pointer;font-weight:bold;margin-right:1em;">
     Home
   </button>
+  <button id="clearWarningFilter" style="background:#333;color:#fff;border:none;padding:0.5em 1em;border-radius:4px;cursor:pointer;font-weight:bold;margin-right:1em;">
+    Clear Warning Filter
+  </button>
+  <button id="visibleBtn" style="background:#333;color:#fff;border:none;padding:0.5em 1em;border-radius:4px;cursor:pointer;font-weight:bold;margin-right:1em;">
+    Show Visible Only
+  </button>
   <label>Route:
     <select id="routeFilter">
       <option value="all">All</option>
+      <option value="I4">I-4</option>
       <option value="I10">I-10</option>
       <option value="I30">I-30</option>
       <option value="I35">I-35</option>
       <option value="I40">I-40</option>
+      <option value="I44">I-44</option>
       <option value="I45">I-45</option>
       <option value="I49">I-49</option>
       <option value="I55">I-55</option>
       <option value="I57">I-57</option>
+      <option value="I70">I-70</option>
+      <option value="I80">I-80</option>
       <option value="I430">I-430</option>
       <option value="I440">I-440</option>
       <option value="I530">I-530</option>
@@ -150,13 +262,16 @@
       <option value="all">All</option>
       <option value="Alabama">Alabama</option>
       <option value="Arkansas">Arkansas</option>
+      <option value="California">California</option>
       <option value="Florida">Florida</option>
       <option value="Georgia">Georgia</option>
       <option value="Illinois">Illinois</option>
+      <option value="Iowa">Iowa</option>
       <option value="Kansas">Kansas</option>
       <option value="Louisiana">Louisiana</option>
       <option value="Missouri">Missouri</option>
       <option value="Mississippi">Mississippi</option>
+      <option value="Nebraska">Nebraska</option>
       <option value="Oklahoma">Oklahoma</option>
       <option value="Tennessee">Tennessee</option>
       <option value="Texas">Texas</option>
@@ -185,13 +300,24 @@
   </label>
 </div>
 
+<div class="layers-menu" id="layersMenu">
+  <strong>Layers:</strong>
+</div>
+
+<div class="main-content">
 <div id="map"></div>
 <div class="camera-grid" id="cameraGrid"></div>
+</div>
 <div class="modal" id="modal" onclick="this.style.display='none';"></div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+<!-- Hls.js for playing m3u8 streams in non-HLS browsers -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.0/dist/hls.min.js"></script>
 <script> 
+// HLS instances keyed by camera id
+let _hlsInstances = {};
+let _modalHls = null;
   const warningColors = {
         "Tsunami Warning": "#FD6347",
         "Tornado Warning": "#FF0000",
@@ -302,12 +428,15 @@
         "Hydrologic Outlook": "#90EE90",
         "Short Term Forecast": "#98FB98",
         "Administrative Message": "#C0C0C0",
+        "Child Abduction Emergency": "#FFD700",
         Default: "#000000", // Default to black if no match
 };
 
 let warningPolygons = [];
 let usCountyGeoJson = null;
 let cachedCanadianAlerts = {};
+let warningToCameraIds = {}; // mapping warningId -> array of camera ids
+let cameraIdToWarnings = {}; // mapping cameraId -> array of warning objects
 
 fetch("https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json")
   .then((res) => res.json())
@@ -426,6 +555,13 @@ function displayWarningsOnMap(warnings, emergencyWarnings, destructiveWarnings) 
         <strong>Time Remaining:</strong> ${getTimeRemaining()}<br>
       `);
 
+      // attach warning metadata
+      polygon._warningId = warning.id;
+      polygon._warningObj = warning;
+      polygon.on('click', function(e) {
+        filterCamerasByWarning(this._warningId);
+      });
+
       polygon.addTo(map);
       if (className) polygon.bringToFront();
       warningPolygons.push(polygon);
@@ -442,9 +578,9 @@ function displayWarningsOnMap(warnings, emergencyWarnings, destructiveWarnings) 
             const latlngs = p[0].map(coord => [coord[1], coord[0]]);
             const polygon = L.polygon(latlngs, {
               color: fallbackColor,
-              weight: 3,
-              opacity: 0.65,
-              fillOpacity: 0.25,
+              weight: 3.5,
+              opacity: 0.75,
+              fillOpacity: 0.1,
               pane: "fallbackPolygons"
             }).bindPopup(`
               <strong>Event:</strong> ${warning.properties.event}<br>
@@ -454,17 +590,28 @@ function displayWarningsOnMap(warnings, emergencyWarnings, destructiveWarnings) 
               <strong>Expires:</strong> ${expires.toLocaleString()}<br>
             `);
 
+            // attach fallback polygon metadata and click handler (must be inside the loop)
+            polygon._warningId = warning.id;
+            polygon._warningObj = warning;
+            polygon.on('click', function(e) {
+              filterCamerasByWarning(this._warningId);
+            });
+
             polygon.addTo(map);
             warningPolygons.push(polygon);
           });
+
         }
       });
     }
   });
+
+  // ensure camera badges are recalculated after warnings are drawn
+  mapWarningsToCameras();
 }
 
 const map = L.map('map').setView([36.3, -94.4], 7);
-L.tileLayer('https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
+L.tileLayer('https://cartodb-basemaps-a.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '© OpenStreetMap'
 }).addTo(map);
@@ -520,6 +667,7 @@ async function conditionalRefreshRadarLayer() {
 setInterval(conditionalRefreshRadarLayer, 60000); // Check every 60 seconds
 
 const PROXY_BASE = '';
+let showOnlyVisible = false;
 let cameras = [];
 let lastUpdated = new Date();
 
@@ -536,6 +684,7 @@ fetch('cameras.json')
       if (!cam.coords || cam.coords.length !== 2) return;
 
       const marker = L.marker(cam.coords, { icon: cameraIcon });
+      marker._camId = cam.id;
       const src = cam.src || getImageUrl(cam.id);
 
       const popupContent =
@@ -543,10 +692,39 @@ fetch('cameras.json')
           ? `<strong>${cam.name}</strong><br><img src="${src}" width="300">`
           : cam.type === 'iframe'
             ? `<strong>${cam.name}</strong><br><iframe src="${cam.src}" width="300" height="200" frameborder="0" allowfullscreen></iframe>`
-            : `<strong>${cam.name}</strong><br><video width="300" src="${cam.src}" autoplay muted loop></video>`;
+            : `<strong>${cam.name}</strong><br><video id="popup-vid-${cam.id}" width="300" controls muted playsinline></video>`;
 
       marker.bindPopup(popupContent);
       markerCluster.addLayer(marker);
+      // Attach HLS into popup when it opens; don't autoplay
+      marker.on('popupopen', function(){
+        setTimeout(() => {
+          const vid = document.getElementById(`popup-vid-${cam.id}`);
+          if(!vid) return;
+          const key = `popup-${cam.id}`;
+          try{ if(_hlsInstances[key]){ _hlsInstances[key].destroy(); delete _hlsInstances[key]; } }catch(e){}
+          const stream = (cam.src || getImageUrl(cam.id) || '').toString();
+          if(stream.toLowerCase().includes('.m3u8')){
+            if(window.Hls && Hls.isSupported()){
+              const h = new Hls();
+              h.loadSource(stream);
+              h.attachMedia(vid);
+              _hlsInstances[key] = h;
+              // do not call play() to respect disabled autoplay
+            } else if(vid.canPlayType && vid.canPlayType('application/vnd.apple.mpegurl')){
+              vid.src = stream;
+            } else {
+              vid.parentElement.innerHTML = '<div style="color:#fff">Cannot play HLS stream in this browser.</div>';
+            }
+          } else {
+            vid.src = stream;
+          }
+        }, 50);
+      });
+      marker.on('popupclose', function(){
+        const key = `popup-${cam.id}`;
+        try{ if(_hlsInstances[key]){ _hlsInstances[key].destroy(); delete _hlsInstances[key]; } }catch(e){}
+      });
     });
 
     map.addLayer(markerCluster);
@@ -556,11 +734,16 @@ fetch('cameras.json')
     markerCluster.bringToFront();
   }
 
+    // After cameras load, build grid and (re)compute mapping to any drawn warnings
     updateCameraGrid();
+    // Map warnings to cameras after a short delay to ensure warnings have been drawn
+    setTimeout(() => {
+      mapWarningsToCameras();
+    }, 500);
   });
 
 const cameraIcon = L.icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/66/66843.png',
+  iconUrl: 'https://cdn-icons-png.flaticon.com/128/10881/10881867.png',
   iconSize: [30, 30],
   iconAnchor: [15, 30]
 });
@@ -576,7 +759,6 @@ function buildCameraBox(cam) {
   box.className = 'camera-box';
   box.setAttribute('data-state', cam.state);
   box.setAttribute('data-route', cam.route);
-
   let media, src;
 
   if (cam.type === 'image') {
@@ -584,10 +766,14 @@ function buildCameraBox(cam) {
     media = `<img id="img-${cam.id}" src="${src}" alt="${cam.name}" onclick="showModal(this.src)">`;
   } else if (cam.type === 'iframe') {
     src = cam.proxy ? PROXY_BASE + encodeURIComponent(cam.rawSrc) : cam.src;
-    media = `<iframe src="${src}" width="300" height="200" frameborder="0" allowfullscreen></iframe>`;
-  } else {
+    media = `<iframe src="${src}" width="100%" height="200" frameborder="0" allowfullscreen></iframe>`;
+    } else {
     src = cam.proxy ? PROXY_BASE + encodeURIComponent(cam.rawSrc) : cam.src;
-    media = `<video id="vid-${cam.id}" controls autoplay muted loop src="${src}" onclick="event.stopPropagation(); showModalVideo(this.src)"></video>`;
+    // detect HLS by .m3u8 in src
+    const isHls = src && src.toString().toLowerCase().includes('.m3u8');
+    // disable autoplay and loop; user must press play
+    media = `<video id="vid-${cam.id}" controls muted playsinline style="width:100%;"></video>`;
+    // attach source after element is created below
   }
 
   box.innerHTML = `
@@ -595,10 +781,134 @@ function buildCameraBox(cam) {
     <div class="coords">${cam.coords.map(c => c.toFixed(5)).join(', ')}</div>
     ${media}
     <div class="timestamp" id="ts-${cam.id}">Updated: ${lastUpdated.toLocaleTimeString()}</div>
+    <div class="camera-warnings" id="warnings-${cam.id}" style="margin:0.5em 0"></div>
   `;
-  
+
+  // If a video element was created, attach HLS if needed (using box-scoped query so element found before DOM insert)
+  if (!cam.type || cam.type !== 'image' && cam.type !== 'iframe'){
+    const v = box.querySelector(`#vid-${cam.id}`);
+      if(v){
+      // cleanup any existing instance
+      try{ if(_hlsInstances[cam.id]){ _hlsInstances[cam.id].destroy(); delete _hlsInstances[cam.id]; } }catch(e){}
+      if(src && src.toString().toLowerCase().includes('.m3u8')){
+        try{
+          if(window.Hls && Hls.isSupported()){
+            const h = new Hls();
+            h.loadSource(src);
+            h.attachMedia(v);
+            _hlsInstances[cam.id] = h;
+            // do not autoplay; user must press play
+          } else if(v.canPlayType && v.canPlayType('application/vnd.apple.mpegurl')){
+            v.src = src;
+          } else {
+            // cannot play HLS, leave poster blank
+          }
+        }catch(e){ console.warn('attach hls', e); }
+      } else {
+        // non-HLS video
+        try{ v.src = src; }catch(e){}
+      }
+      v.addEventListener('click', function(ev){ ev.stopPropagation(); showModalVideo(src); });
+    }
+  }
+
   return box;
 }
+
+// Simple ray-casting point-in-polygon test for lat/lng arrays
+function pointInPolygon(point, vs) {
+  // point: [lat, lng]
+  const x = point[1], y = point[0];
+  let inside = false;
+  for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+    const xi = vs[i][1], yi = vs[i][0];
+    const xj = vs[j][1], yj = vs[j][0];
+
+    const intersect = ((yi > y) !== (yj > y)) &&
+      (x < (xj - xi) * (y - yi) / (yj - yi + 0.0) + xi);
+    if (intersect) inside = !inside;
+  }
+
+  return inside;
+}
+
+function mapWarningsToCameras() {
+  warningToCameraIds = {};
+  cameraIdToWarnings = {};
+  // initialize
+  cameras.forEach(cam => {
+    cameraIdToWarnings[cam.id] = [];
+  });
+
+  warningPolygons.forEach(p => {
+    const wid = p._warningId || (p._warningObj && p._warningObj.id) || JSON.stringify(p._latlngs || p.getLatLngs());
+    warningToCameraIds[wid] = [];
+    const latlngs = p.getLatLngs ? p.getLatLngs() : [];
+    // normalize to array of [lat,lng]
+    const ring = (latlngs && latlngs[0]) ? latlngs[0].map(ll => [ll.lat, ll.lng]) : [];
+
+    cameras.forEach(cam => {
+      if (!cam.coords || cam.coords.length !== 2) return;
+      if (ring.length && pointInPolygon(cam.coords, ring)) {
+        warningToCameraIds[wid].push(cam.id);
+        cameraIdToWarnings[cam.id].push(p._warningObj || {});
+      }
+    });
+  });
+
+  // Update any existing camera boxes with warning badges
+  cameras.forEach(cam => {
+    const container = document.getElementById(`warnings-${cam.id}`);
+    if (!container) return;
+    container.innerHTML = '';
+    const warns = cameraIdToWarnings[cam.id] || [];
+    warns.forEach(w => {
+      const btn = document.createElement('button');
+      btn.textContent = w.properties ? w.properties.event : (w.event || 'Warning');
+      btn.style.background = warningColors[w.properties?.event] || '#666';
+      btn.style.color = '#000';
+      btn.style.border = 'none';
+      btn.style.padding = '0.2em 0.5em';
+      btn.style.marginRight = '0.25em';
+      btn.style.borderRadius = '4px';
+      btn.style.cursor = 'pointer';
+      btn.title = w.properties ? w.properties.headline || w.properties.description || '' : '';
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const wid = w.id;
+        filterCamerasByWarning(wid);
+        // zoom to warning polygon if available
+        const poly = warningPolygons.find(pp => (pp._warningId === wid));
+        if (poly) map.fitBounds(poly.getBounds());
+      });
+      container.appendChild(btn);
+    });
+  });
+}
+
+function filterCamerasByWarning(wid) {
+  const ids = warningToCameraIds[wid] || [];
+  const grid = document.getElementById('cameraGrid');
+  grid.innerHTML = '';
+  if (ids.length === 0) {
+    const msg = document.createElement('div');
+    msg.style.color = '#ccc';
+    msg.style.padding = '1em';
+    msg.textContent = 'No cameras found inside this warning.';
+    grid.appendChild(msg);
+    return;
+  }
+
+  cameras.forEach(cam => {
+    if (ids.includes(cam.id)) {
+      grid.appendChild(buildCameraBox(cam));
+    }
+  });
+}
+
+document.getElementById('clearWarningFilter').addEventListener('click', function() {
+  updateCameraGrid();
+});
 
 function updateCameraGrid() {
   const routeFilter = document.getElementById('routeFilter').value;
@@ -606,9 +916,18 @@ function updateCameraGrid() {
   const regionFilter = document.getElementById('regionFilter').value;
   const networkFilter = document.getElementById('networkFilter').value;
   const grid = document.getElementById('cameraGrid');
+  // destroy any existing Hls instances for camera boxes before clearing
+  try{ Object.values(_hlsInstances || {}).forEach(h => { try{ h.destroy(); }catch(e){} }); _hlsInstances = {}; }catch(e){}
+  // destroy modal Hls if present
+  try{ if(_modalHls){ _modalHls.destroy(); _modalHls = null; } }catch(e){}
   grid.innerHTML = '';
   cameras.forEach(cam => {
-    if ((routeFilter === 'all' || cam.route === routeFilter) && (stateFilter === 'all' || cam.state === stateFilter) && (regionFilter === 'all' || cam.region === regionFilter) && (networkFilter === 'all' || cam.network === networkFilter)){
+    let show = (routeFilter === 'all' || cam.route === routeFilter) && (stateFilter === 'all' || cam.state === stateFilter) && (regionFilter === 'all' || cam.region === regionFilter) && (networkFilter === 'all' || cam.network === networkFilter);
+    if (showOnlyVisible) {
+      const bounds = map.getBounds();
+      show = show && bounds.contains(cam.coords);
+    }
+    if (show) {
       grid.appendChild(buildCameraBox(cam));
     }
   });
@@ -622,8 +941,32 @@ function showModal(src) {
 
 function showModalVideo(src) {
   const modal = document.getElementById('modal');
-  modal.innerHTML = `<video src="${src}" controls autoplay style="max-width:90%; max-height:90%"></video>`;
-  modal.style.display = 'flex';
+  // cleanup previous modal HLS
+  try{ if(_modalHls){ _modalHls.destroy(); _modalHls = null; } }catch(e){}
+  // if HLS stream, attach Hls.js to video element
+  if(src && src.toString().toLowerCase().includes('.m3u8')){
+    modal.innerHTML = `<video id="modal-vid" controls autoplay style="max-width:90%; max-height:90%"></video>`;
+    modal.style.display = 'flex';
+    const v = document.getElementById('modal-vid');
+    if(v){
+      try{
+        if(window.Hls && Hls.isSupported()){
+          const h = new Hls();
+          h.loadSource(src);
+          h.attachMedia(v);
+          _modalHls = h;
+          // do not autoplay; user must press play
+        } else if(v.canPlayType && v.canPlayType('application/vnd.apple.mpegurl')){
+          v.src = src;
+        } else {
+          modal.innerHTML = `<div style="color:#fff;padding:1em">Cannot play HLS stream in this browser.</div>`;
+        }
+      }catch(e){ console.warn('modal hls attach', e); }
+    }
+  } else {
+    modal.innerHTML = `<video src="${src}" controls autoplay style="max-width:90%; max-height:90%"></video>`;
+    modal.style.display = 'flex';
+  }
 }
 
 // Update images every 30s
@@ -648,6 +991,11 @@ setInterval(() => {
   document.getElementById(id).addEventListener('change', updateCameraGrid);
 });
 
+document.getElementById('visibleBtn').addEventListener('click', function() {
+  showOnlyVisible = !showOnlyVisible;
+  updateCameraGrid();
+});
+
 updateCameraGrid();
 
 document.getElementById('homeBtn').addEventListener('click', function() {
@@ -663,6 +1011,13 @@ map.getPane('realEarthPane').style.zIndex = 200; // Above base tiles, below over
 // Create a custom pane for ProbSevere above all others
 map.createPane('probSeverePane');
 map.getPane('probSeverePane').style.zIndex = 400; // Above other overlays
+
+// Helper function to convert RGB/hex colors to string
+function rgbString(color) {
+  if (!color) return null;
+  if (typeof color === 'string') return color;
+  return null;
+}
 
 // Helper to create and style RealEarth GeoJSON layers
 function createRealEarthLayer(url, paneName = 'realEarthPane') {
@@ -707,31 +1062,333 @@ function createRealEarthLayer(url, paneName = 'realEarthPane') {
   return layer;
 }
 
+// Add this function before realEarthLayerObjs definition:
+function createSPCDay1Layer(url) {
+  const layer = L.layerGroup();
+  layer._realEarthUrl = url;
+  layer._geoJsonLayer = null;
+
+  async function loadData() {
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (layer._geoJsonLayer) {
+        layer.removeLayer(layer._geoJsonLayer);
+      }
+
+      layer._geoJsonLayer = L.geoJSON(data, {
+        pane: 'realEarthPane',
+        style: feature => ({
+          color: feature.properties.stroke || '#00bfff',
+          weight: 2,
+          opacity: 1,
+          fillColor: feature.properties.fill || '#00bfff',
+          fillOpacity: 0.35
+        }),
+        onEachFeature: (feature, layerObj) => {
+          // Format VALID (e.g., 202509030100) to readable date/time
+          let validStr = feature.properties.VALID || '';
+          let desc = validStr.length === 12
+            ? `${validStr.slice(0,4)}-${validStr.slice(4,6)}-${validStr.slice(6,8)} ${validStr.slice(8,10)}:${validStr.slice(10,12)} UTC`
+            : validStr;
+          layerObj.bindPopup(
+            `<strong>${feature.properties.LABEL2 || 'SPC Day 1 Outlook'}</strong><br>${desc}`
+          );
+        }
+      });
+      layer._geoJsonLayer.addTo(layer);
+    } catch (e) {
+      console.error('Failed to load SPC Day 1 layer:', url, e);
+    }
+  }
+
+  layer._refresh = loadData;
+  loadData();
+  return layer;
+}
+
+// Closures Points specific layer with incident icons - clusters with cameras
+function createClosuresLayer(url) {
+  const layer = L.layerGroup();
+  layer._geoJsonUrl = url;
+  layer._closureMarkers = []; // Track closure markers for add/remove
+  layer._isEnabled = false; // Track if layer is currently enabled
+
+  // Icon for closure/incident points
+  const incidentIcon = L.icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/128/15674/15674336.png',
+    iconSize: [30, 30],
+    iconAnchor: [15, 30],
+    popupAnchor: [0, -30],
+    shadowUrl: null
+  });
+
+  async function loadData() {
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+
+      // Remove old markers from cluster
+      layer._closureMarkers.forEach(marker => {
+        markerCluster.removeLayer(marker);
+      });
+      layer._closureMarkers = [];
+
+      // Process each feature as a marker (but don't add to cluster yet)
+      data.features.forEach(feature => {
+        if (feature.geometry && feature.geometry.type === 'Point') {
+          const latlng = L.latLng(feature.geometry.coordinates[1], feature.geometry.coordinates[0]);
+          const props = feature.properties;
+          
+          const marker = L.marker(latlng, {
+            icon: incidentIcon
+          });
+
+          // Build popup from properties
+          let popupContent = `<strong>${props.name || props.title || 'Incident'}</strong>`;
+          
+          if (props.reason_name) {
+            popupContent += `<br><strong>Reason:</strong> ${props.reason_name}`;
+          }
+          if (props.description) {
+            popupContent += `<br><strong>Description:</strong> ${props.description}`;
+          }
+          if (props.closed_time) {
+            popupContent += `<br><strong>Closed Time:</strong> ${props.closed_time}`;
+          }
+          if (props.travel_direction_name) {
+            popupContent += `<br><strong>Direction:</strong> ${props.travel_direction_name}`;
+          }
+          if (props.lanes && props.lanes["0"]) {
+            popupContent += `<br><strong>Lanes Affected:</strong> ${props.lanes["0"]}`;
+          }
+          if (props.updated_at_time) {
+            popupContent += `<br><strong>Updated:</strong> ${props.updated_at_time}`;
+          }
+          if (props.reported_by) {
+            popupContent += `<br><strong>Reported By:</strong> ${props.reported_by}`;
+          }
+          
+          marker.bindPopup(popupContent);
+          layer._closureMarkers.push(marker);
+        }
+      });
+
+      // Only add to cluster if layer is currently enabled
+      if (layer._isEnabled) {
+        layer._closureMarkers.forEach(marker => {
+          markerCluster.addLayer(marker);
+        });
+        if (typeof markerCluster !== "undefined") {
+          markerCluster.bringToFront();
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load Closures layer:', url, e);
+    }
+  }
+
+  layer._refresh = loadData;
+  layer._toggle = function(enabled) {
+    layer._isEnabled = enabled;
+    layer._closureMarkers.forEach(marker => {
+      if (enabled) {
+        markerCluster.addLayer(marker);
+      } else {
+        markerCluster.removeLayer(marker);
+      }
+    });
+    if (enabled && typeof markerCluster !== "undefined") {
+      markerCluster.bringToFront();
+    }
+  };
+  
+  loadData();
+  return layer;
+}
+
+// Winter Routes specific layer with color mapping
+function createWinterRoutesLayer(url) {
+  const layer = L.layerGroup();
+  layer._geoJsonUrl = url;
+  layer._geoJsonLayer = null;
+
+  // Color mapping for road conditions
+  const conditionColors = {
+    'Clear': '#2ecc71',              
+    'Mostly Clear': '#52be80',       
+    'Partly Covered': '#f1c40f',     
+    'Covered': '#e67e22',            
+    'Clearing Suspended': '#e74c3c', 
+    'Closed': '#c0392b'              
+  };
+
+  const roadContentColors = {
+    'Clear': '#2ecc71',              
+    'Snow': '#52be80',               
+    'Slush': '#e67e22',              
+    'Ice Patches': '#e74c3c',        
+    'Ice': '#c0392b'                 
+  };
+
+  function getRouteColor(feature) {
+    const props = feature.properties;
+    
+    // Use condition property
+    const condition = props.condition || '';
+    
+    // Use precip property for what's on the road
+    const precip = props.precip || '';
+
+    // Prioritize precip (what's on the road) over condition
+    // This ensures snow/ice displays even if condition is "Clear" or "Mostly Clear"
+    if (precip && roadContentColors[precip]) {
+      return roadContentColors[precip];
+    }
+    if (condition && conditionColors[condition]) {
+      return conditionColors[condition];
+    }
+    
+    return '#95a5a6'; // Default gray if no match
+  }
+
+  async function loadData() {
+    try {
+      // Fetch both the main and city-level routes
+      const [res1, res2] = await Promise.all([
+        fetch(url),
+        fetch('https://layers.idrivearkansas.com/winter_routes_city.geojson')
+      ]);
+      const data1 = await res1.json();
+      const data2 = await res2.json();
+
+      // Merge features from both sources
+      const mergedData = {
+        type: 'FeatureCollection',
+        features: [
+          ...(data1.features || []),
+          ...(data2.features || [])
+        ]
+      };
+
+      if (layer._geoJsonLayer) {
+        layer.removeLayer(layer._geoJsonLayer);
+      }
+
+      layer._geoJsonLayer = L.geoJSON(mergedData, {
+        pane: 'realEarthPane',
+        style: feature => {
+          const props = feature.properties;
+          const condition = props.condition || '';
+          const precip = props.precip || '';
+          const style = {
+            color: getRouteColor(feature),
+            weight: 3,
+            opacity: 1,
+            fillColor: getRouteColor(feature),
+            fillOpacity: 1
+          };
+          
+          if (condition === 'Mostly Clear' && precip === 'Snow') {
+            style.color = '#7dc740';
+            style.fillColor = '#7dc740';
+            style.weight = 3;
+          }
+          
+          return style;
+        },
+        onEachFeature: (feature, layerObj) => {
+          const props = feature.properties;
+          let popupContent = '';
+          
+          // Road name - format based on route_type
+          let roadName = 'Unknown Route';
+          if (props.route_type && props.route) {
+            if (props.route_type === 'State') {
+              roadName = `AR ${props.route}`;
+            } else if (props.route_type === 'US') {
+              roadName = `US ${props.route}`;
+            } else if (props.route_type === 'Interstate') {
+              roadName = `I ${props.route}`;
+            } else {
+              roadName = `${props.route_type} ${props.route}`;
+            }
+          }
+          popupContent += `<strong>${roadName}</strong><br>`;
+          
+          // Segment (seg_extern)
+          if (props.seg_extern) {
+            popupContent += `<strong>Segment:</strong> ${props.seg_extern}<br>`;
+          }
+          
+          // Condition (This route is)
+          if (props.condition) {
+            popupContent += `<strong>This route is:</strong> ${props.condition}<br>`;
+          }
+          
+          // What's on the road (precip)
+          if (props.precip) {
+            popupContent += `<strong>What's on the road:</strong> ${props.precip}<br>`;
+          }
+          
+          // Temperature
+          if (props.temperature) {
+            popupContent += `<strong>Temp:</strong> ${props.temperature}°F<br>`;
+          }
+          
+          // Last Updated
+          if (props.lastupdate) {
+            // Parse and format the ISO timestamp
+            const updateDate = new Date(props.lastupdate);
+            const formattedDate = updateDate.toLocaleString();
+            popupContent += `<strong>Last Updated:</strong> ${formattedDate}`;
+          }
+          
+          layerObj.bindPopup(popupContent);
+        }
+      });
+      layer._geoJsonLayer.addTo(layer);
+    } catch (e) {
+      console.error('Failed to load Winter Routes layer:', url, e);
+    }
+  }
+
+  layer._refresh = loadData;
+  loadData();
+  return layer;
+}
+
 // Define layers and their names/URLs
 const realEarthLayers = [
   {
-    name: 'Tropical Weather Forecast',
-    url: 'https://realearth.ssec.wisc.edu/api/shapes?products=TSFCST'
+    name: 'Road Conditions',
+    url: 'https://layers.idrivearkansas.com/winter_routes.geojson',
+    winterRoutes: true
   },
-  {
-    name: 'Excessive Rain Outlook',
-    url: 'https://realearth.ssec.wisc.edu/api/shapes?products=WPC-ExcessiveRain'
-  },
-  {
-    name: 'Winter Storm Severity Index',
-    url: 'https://realearth.ssec.wisc.edu/api/shapes?products=WPC-WSSI'
-  },
-  // ProbSevere will be handled separately
+  // --- REPLACE THIS ENTRY ---
   {
     name: 'SPC Convective Outlook Day 1',
-    url: 'https://realearth.ssec.wisc.edu/api/shapes?products=SPCcoday1'
+    url: 'https://www.spc.noaa.gov/products/outlook/day1otlk_cat.lyr.geojson',
+    custom: true // Add a flag for custom handling
+  },
+  {
+    name: 'Incidents/Closures',
+    url: 'https://layers.idrivearkansas.com/closures_points.geojson',
+    closures: true
   }
 ];
 
 // Create layers (excluding ProbSevere)
 const realEarthLayerObjs = realEarthLayers.map(l => ({
   name: l.name,
-  layer: createRealEarthLayer(l.url)
+  layer: l.custom
+    ? createSPCDay1Layer(l.url)
+    : l.winterRoutes
+      ? createWinterRoutesLayer(l.url)
+      : l.closures
+        ? createClosuresLayer(l.url)
+        : createRealEarthLayer(l.url)
 }));
 
 // Create ProbSevere layer separately, using the dedicated pane
@@ -740,75 +1397,120 @@ const probSevereLayerObj = {
   layer: createRealEarthLayer('https://realearth.ssec.wisc.edu/api/shapes?products=PROBSEVEREV3', 'probSeverePane')
 };
 
-// Add toggles to a Leaflet control on the map
-const realEarthControl = L.control({ position: 'bottomleft' });
-
-realEarthControl.onAdd = function(map) {
-  const div = L.DomUtil.create('div', 'realearth-key');
-  div.style.background = '#222';
-  div.style.color = '#fff';
+// Create legend for Road Conditions layer
+const legendControl = L.control({ position: 'bottomleft' });
+legendControl.onAdd = function(map) {
+  const div = L.DomUtil.create('div', 'info legend');
+  div.style.background = '#1e1e1e';
+  div.style.color = '#f0f0f0';
   div.style.padding = '1em';
-  div.style.borderRadius = '8px';
-  div.style.boxShadow = '0 2px 8px rgba(0,0,0,0.5)';
-  div.style.fontSize = '1em';
-  div.style.maxWidth = '300px';
-  div.innerHTML = `<strong>Layers</strong><br>`;
-  realEarthLayerObjs.forEach((obj, i) => {
-    const id = `realEarthToggle${i}`;
-    div.innerHTML += `<label style="display:block; margin:0.5em 0;">
-      <input type="checkbox" id="${id}"> ${obj.name}
-    </label>`;
-  });
-  // ProbSevere toggle
-  div.innerHTML += `<label style="display:block; margin:0.5em 0;">
-    <input type="checkbox" id="probSevereToggle"> ${probSevereLayerObj.name}
-  </label>`;
+  div.style.borderRadius = '4px';
+  div.style.border = '1px solid #333';
+  div.style.fontSize = '0.9em';
+  div.style.display = 'none';
+  
+  div.innerHTML = `
+    <strong style="color: #fff; display: block; margin-bottom: 0.5em;">Road Conditions</strong>
+    <div style="display: flex; flex-direction: column; gap: 0.3em;">
+      <div style="display: flex; align-items: center; gap: 0.5em;">
+        <div style="width: 20px; height: 20px; background-color: #c0392b; border: 1px solid #999;"></div>
+        <span>Closed / Ice</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5em;">
+        <div style="width: 20px; height: 20px; background-color: #e74c3c; border: 1px solid #999;"></div>
+        <span>Clearing Suspended / Ice Patches</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5em;">
+        <div style="width: 20px; height: 20px; background-color: #e67e22; border: 1px solid #999;"></div>
+        <span>Covered / Slush</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5em;">
+        <div style="width: 20px; height: 20px; background-color: #f1c40f; border: 1px solid #999;"></div>
+        <span>Partly Covered</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5em;">
+        <div style="width: 20px; height: 20px; background-color: #7dc740; border: 1px solid #999;"></div>
+        <span>Mostly Clear + Snow</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5em;">
+        <div style="width: 20px; height: 20px; background-color: #52be80; border: 1px solid #999;"></div>
+        <span>Mostly Clear / Snow</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5em;">
+        <div style="width: 20px; height: 20px; background-color: #2ecc71; border: 1px solid #999;"></div>
+        <span>Clear</span>
+      </div>
+    </div>
+  `;
+  
   return div;
 };
-realEarthControl.addTo(map);
 
-// Attach event listeners after control is added
-setTimeout(() => {
-  realEarthLayerObjs.forEach((obj, i) => {
-    document.getElementById(`realEarthToggle${i}`).addEventListener('change', function(e) {
-      if (e.target.checked) {
-        obj.layer.addTo(map);
-      } else {
-        map.removeLayer(obj.layer);
+// Build layers menu with all layers sorted alphabetically
+const allLayers = [
+  ...realEarthLayerObjs,
+  probSevereLayerObj
+];
+
+// Sort alphabetically by name
+allLayers.sort((a, b) => a.name.localeCompare(b.name));
+
+const layersMenu = document.getElementById('layersMenu');
+
+// Add all layer toggles
+allLayers.forEach((obj, i) => {
+  const id = `layerToggle${i}`;
+  const label = document.createElement('label');
+  label.style.display = 'flex';
+  label.style.alignItems = 'center';
+  label.style.gap = '0.5em';
+  label.style.margin = '0';
+  
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.id = id;
+  checkbox.style.cursor = 'pointer';
+  
+  const text = document.createElement('span');
+  text.textContent = obj.name;
+  
+  label.appendChild(checkbox);
+  label.appendChild(text);
+  layersMenu.appendChild(label);
+  
+  // Add change event listener
+  checkbox.addEventListener('change', function(e) {
+    if (obj.layer._toggle) {
+      // Use custom toggle for special layers like closures
+      obj.layer._toggle(e.target.checked);
+    } else if (e.target.checked) {
+      obj.layer.addTo(map);
+      // Show legend if this is the Road Conditions layer
+      if (obj.name === 'Road Conditions') {
+        legendControl.addTo(map);
+        legendControl.getContainer().style.display = 'block';
       }
-    });
-  });
-  // ProbSevere toggle
-  document.getElementById('probSevereToggle').addEventListener('change', function(e) {
-    if (e.target.checked) {
-      probSevereLayerObj.layer.addTo(map);
     } else {
-      map.removeLayer(probSevereLayerObj.layer);
+      map.removeLayer(obj.layer);
+      // Hide legend if this is the Road Conditions layer
+      if (obj.name === 'Road Conditions' && legendControl && map.hasLayer(legendControl)) {
+        map.removeControl(legendControl);
+      }
     }
   });
-}, 0);
+});
 
-// Refresh RealEarth layers every 5 minutes
+// Refresh RealEarth layers every 2 minutes
 setInterval(() => {
   realEarthLayerObjs.forEach(obj => {
     obj.layer._refresh();
   });
-}, 300000); // 5 minutes
+}, 120000); // 2 minutes
 
 // Refresh ProbSevere every minute
 setInterval(() => {
   probSevereLayerObj.layer._refresh();
 }, 60000); // 1 minute
-
-// Helper function to convert "0 255 0" to "#00ff00"
-function rgbString(rgb) {
-  if (!rgb) return null;
-  if (typeof rgb === "string" && rgb.match(/^\d+\s+\d+\s+\d+$/)) {
-    const [r, g, b] = rgb.split(' ').map(Number);
-    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
-  }
-  return rgb;
-}
 </script>
 </body>
 </html>
