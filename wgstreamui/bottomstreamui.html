@@ -3,197 +3,209 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=1609, initial-scale=1.0" />
-  <title>Bottom Weather Alert Banner</title>
+  <title>Unified Broadcast Ticker - Synced</title>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background: #f9fafb;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      font-weight: bold;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700;900&family=Roboto:wght@700&display=swap');
 
-    .alert-container {
+    body { margin: 0; background-color: transparent; font-family: 'Roboto', sans-serif; overflow: hidden; }
+
+    /* The Main Wrapper */
+    .ticker-wrapper {
       width: 1609px;
-      height: 25px;
-      position: relative;
-      background-color: #000;
-      color: white;
-      overflow: hidden;
-      opacity: 1;
-      transition: opacity 1s ease-in-out;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    .alert-hidden {
-      opacity: 0;
-    }
-
-    .event-box {
-      position: absolute;
-      left: -220px;
-      top: 0;
-      height: 100%;
-      min-width: 200px;
+      height: 40px;
       display: flex;
       align-items: center;
-      justify-content: flex-start;
-      padding: 0 15px;
-      font-weight: bold;
-      z-index: 2;
-      border-right: 1px solid rgba(255, 255, 255, 0.3);
-      pointer-events: none;
-      transition: left 0.5s ease-in-out;
+      position: relative;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+      filter: drop-shadow(0 5px 15px rgba(0,0,0,0.6));
     }
 
-    .event-box.slide-in {
-      left: 0;
+    .alert-visible { opacity: 1; }
+
+    /* SYNCED BADGE: Matches top banner width and angle */
+    .event-badge {
+      height: 100%;
+      min-width: 337px; /* SYNCED WITH TOP BANNER */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 50px;
+      z-index: 10;
+      /* SYNCED CLIP-PATH: 95% width at bottom to match top banner geometry */
+      clip-path: polygon(0 0, 100% 0, 95% 100%, 0 100%);
+      font-family: 'Roboto Condensed', sans-serif;
+      font-weight: 900;
+      font-size: 18px;
+      text-transform: uppercase;
+      color: white;
+      position: relative;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .scroll-container {
+    /* Badge glossy sheen */
+    .event-badge::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 40%;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+    }
+
+    /* The Main Body: Synced Overlap */
+    .data-tray {
+      flex-grow: 1;
+      height: 100%;
+      background: linear-gradient(90deg, #0a0a0a 0%, #1a1a1a 100%);
+      margin-left: -70px; /* SYNCED OVERLAP TO PREVENT GAPS */
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      border-right: 3px solid rgba(255,255,255,0.1);
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* --- FULL BANNER INTRO OVERLAY --- */
+    .full-intro-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: #FF0000;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+      font-family: 'Roboto Condensed', sans-serif;
+      font-weight: 900;
+      font-size: 24px;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      animation: emergency-flash 0.5s infinite alternate;
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    @keyframes emergency-flash {
+      from { background-color: #FF0000; }
+      to { background-color: #990000; }
+    }
+
+    /* --- TICKER SCROLL --- */
+    #scrollText {
       white-space: nowrap;
-      display: inline-block;
-      padding-left: 220px;
-      animation: scroll-left 20s linear infinite;
-      z-index: 1;
-      font-weight: bold;
+      position: absolute;
+      left: 100%;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      text-transform: uppercase;
+      padding-left: 90px; /* SYNCED PADDING */
     }
 
-    @keyframes scroll-left {
-      0% {
-        transform: translateX(100%);
-      }
-      100% {
-        transform: translateX(-100%);
-      }
+    .animate-active { animation: scroll-main 40s linear forwards; }
+
+    @keyframes scroll-main {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-450%); } 
     }
+
+    .hidden { display: none !important; }
+    .transparent { opacity: 0; pointer-events: none; transform: scaleY(0.5); }
   </style>
 </head>
 <body>
 
-  <div class="alert-container" id="alertBanner">
-    <div class="event-box" id="alertEvent">Loading...</div>
-    <div class="scroll-container" id="alertMessage">Fetching latest alerts...</div>
+  <div class="ticker-wrapper" id="banner">
+    <div id="fullIntro" class="full-intro-overlay hidden">
+      NEW WEATHER ALERT ISSUED
+    </div>
+
+    <div class="event-badge" id="badge">Alert</div>
+    <div class="data-tray">
+      <div id="scrollText"></div>
+    </div>
   </div>
 
   <script>
-    const relevantEvents = [
-      "Tornado Warning",
-      "Severe Thunderstorm Warning",
-      "Flash Flood Warning",
-      "Tornado Watch",
-      "Severe Thunderstorm Watch",
-    ];
-
-    const stateMap = {
-      AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas", CA: "California",
-      CO: "Colorado", CT: "Connecticut", DE: "Delaware", FL: "Florida", GA: "Georgia",
-      HI: "Hawaii", ID: "Idaho", IL: "Illinois", IN: "Indiana", IA: "Iowa",
-      KS: "Kansas", KY: "Kentucky", LA: "Louisiana", ME: "Maine", MD: "Maryland",
-      MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi",
-      MO: "Missouri", MT: "Montana", NE: "Nebraska", NV: "Nevada", NH: "New Hampshire",
-      NJ: "New Jersey", NM: "New Mexico", NY: "New York", NC: "North Carolina",
-      ND: "North Dakota", OH: "Ohio", OK: "Oklahoma", OR: "Oregon", PA: "Pennsylvania",
-      RI: "Rhode Island", SC: "South Carolina", SD: "South Dakota", TN: "Tennessee",
-      TX: "Texas", UT: "Utah", VT: "Vermont", VA: "Virginia", WA: "Washington",
-      WV: "West Virginia", WI: "Wisconsin", WY: "Wyoming"
+    const stateMap = { AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas", CA: "California", CO: "Colorado", CT: "Connecticut", DE: "Delaware", FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho", IL: "Illinois", IN: "Indiana", IA: "Iowa", KS: "Kansas", KY: "Kentucky", LA: "Louisiana", ME: "Maine", MD: "Maryland", MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi", MO: "Missouri", MT: "Montana", NE: "Nebraska", NV: "Nevada", NH: "New Hampshire", NJ: "New Jersey", NM: "New Mexico", NY: "New York", NC: "North Carolina", ND: "North Dakota", OH: "Ohio", OK: "Oklahoma", OR: "Oregon", PA: "Pennsylvania", RI: "Rhode Island", SC: "South Carolina", SD: "South Dakota", TN: "Tennessee", TX: "Texas", UT: "Utah", VT: "Vermont", VA: "Virginia", WA: "Washington", WV: "West Virginia", WI: "Wisconsin", WY: "Wyoming" };
+    
+    const colors = { 
+      "Tornado Warning": { bg: "#FF0000", text: "white" }, 
+      "Flash Flood Warning": { bg: "#8B0000", text: "white" }, 
+      "Severe Thunderstorm Warning": { bg: "#FFA500", text: "white" }, 
+      "Tornado Watch": { bg: "#FFFF00", text: "black" }, 
+      "Severe Thunderstorm Watch": { bg: "#DB7093", text: "black" } 
     };
 
-    const eventColors = {
-      "Tornado Warning": { bg: "#FF0000", text: "white" },
-      "Flash Flood Warning": { bg: "#8B0000", text: "white" },
-      "Severe Thunderstorm Warning": { bg: "#FFA500", text: "white" },
-      "Tornado Watch": { bg: "#FFFF00", text: "black" },
-      "Severe Thunderstorm Watch": { bg: "#DB7093", text: "black" },
-    };
-
-    let lastMessage = '';
+    let lastId = ''; 
     let scrollCount = 0;
-    let fadeTimeout = null;
 
-    function formatTime(expires) {
-		const date = new Date(expires);
-		const month = date.toLocaleString('en-US', { month: 'short' });
-		const day = String(date.getDate()).padStart(2, '0');
-		const year = date.getFullYear();
-		let hours = date.getHours();
-		const minutes = String(date.getMinutes()).padStart(2, '0');
-		const ampm = hours >= 12 ? 'PM' : 'AM';
-		hours = hours % 12 || 12;
-		const hourStr = String(hours).padStart(2, '0');
-		return `${month} ${day}, ${year} ${hourStr}:${minutes} ${ampm}`;
-	}
-
-    function fadeOutBanner() {
-      document.getElementById("alertBanner").classList.add("alert-hidden");
-      document.getElementById("alertEvent").classList.remove("slide-in");
-    }
-
-    function fadeInBanner() {
-      document.getElementById("alertBanner").classList.remove("alert-hidden");
-      document.getElementById("alertEvent").classList.add("slide-in");
-    }
-
-    function resetScrollTimer() {
-      scrollCount = 0;
-      clearInterval(fadeTimeout);
-      fadeTimeout = setInterval(() => {
-        scrollCount++;
-        if (scrollCount >= 4) {
-          fadeOutBanner();
-          clearInterval(fadeTimeout);
-        }
-      }, 20000); // match scroll duration
-    }
-
-    async function fetchAlert() {
+    async function checkAlerts() {
       try {
         const res = await fetch("https://api.weather.gov/alerts/active");
         const data = await res.json();
-        const alerts = data.features
-          .map((feature) => feature.properties)
-          .filter((alert) => relevantEvents.includes(alert.event));
-
-        if (alerts.length > 0) {
-          const { event, senderName, areaDesc, expires } = alerts[0];
-          let sender = senderName.replace("NWS ", "");
-          const stateAbbr = sender.split(" ").pop();
-          const stateFull = stateMap[stateAbbr] || stateAbbr;
-          const location = sender.replace(stateAbbr, stateFull);
-          const message = `The National Weather Service in ${location} has issued a ${event} for: ${areaDesc} until ${formatTime(expires)}`;
-
-          if (message !== lastMessage) {
-            lastMessage = message;
-            const eventBox = document.getElementById("alertEvent");
-            const colors = eventColors[event] || { bg: "#444", text: "white" };
-
-            eventBox.textContent = event;
-            eventBox.style.backgroundColor = colors.bg;
-            eventBox.style.color = colors.text;
-
-            document.getElementById("alertMessage").textContent = message;
-
-            fadeInBanner();
-            resetScrollTimer();
-          }
-        } else {
-          lastMessage = '';
-          fadeOutBanner();
+        // Sorting alerts to match top banner priority (optional, but good for consistency)
+        const alert = data.features.map(f => f.properties).find(a => colors[a.event]);
+        
+        if (alert && alert.id !== lastId) { 
+          lastId = alert.id; 
+          playEmergencyOverride(alert); 
         }
-      } catch (err) {
-        console.error("Failed to fetch alerts:", err);
-        const errorBox = document.getElementById("alertEvent");
-        errorBox.textContent = "Error";
-        errorBox.style.backgroundColor = "#666";
-        errorBox.style.color = "white";
-        document.getElementById("alertMessage").textContent = "Could not fetch weather alerts.";
-      }
+      } catch (e) { console.error("API Error:", e); }
     }
 
-    fetchAlert();
-    resetScrollTimer();
-    setInterval(fetchAlert, 60000); // every 5 minutes
-  </script>
+    function playEmergencyOverride(alert) {
+      scrollCount = 0;
+      const banner = document.getElementById("banner");
+      const fullIntro = document.getElementById("fullIntro");
+      const ticker = document.getElementById("scrollText");
 
+      fullIntro.classList.remove("hidden", "transparent");
+      banner.classList.add("alert-visible");
+      ticker.classList.remove("animate-active");
+
+      setTimeout(() => {
+        fullIntro.classList.add("transparent");
+        setTimeout(() => { 
+          fullIntro.classList.add("hidden"); 
+          startTicker(alert); 
+        }, 800);
+      }, 7000);
+    }
+
+    function startTicker(alert) {
+      const badge = document.getElementById("badge");
+      const ticker = document.getElementById("scrollText");
+      const c = colors[alert.event];
+
+      badge.textContent = alert.event; 
+      badge.style.backgroundColor = c.bg; 
+      badge.style.color = c.text;
+
+      let sender = alert.senderName.replace("NWS ", "");
+      const stateAbbr = sender.split(" ").pop();
+      const location = sender.replace(stateAbbr, stateMap[stateAbbr] || stateAbbr);
+      const timeStr = new Date(alert.expires).toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+      ticker.textContent = `THE NATIONAL WEATHER SERVICE IN ${location.toUpperCase()} HAS ISSUED A ${alert.event.toUpperCase()} FOR: ${alert.areaDesc.toUpperCase()} UNTIL ${timeStr.toUpperCase()}.`;
+      
+      ticker.classList.remove("animate-active");
+      void ticker.offsetWidth; 
+      ticker.classList.add("animate-active");
+
+      ticker.onanimationend = () => {
+        scrollCount++;
+        if (scrollCount < 3) {
+          startTicker(alert);
+        } else {
+          document.getElementById("banner").classList.remove("alert-visible");
+        }
+      };
+    }
+
+    checkAlerts();
+    setInterval(checkAlerts, 45000);
+  </script>
 </body>
 </html>
