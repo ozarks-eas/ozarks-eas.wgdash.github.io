@@ -22,6 +22,7 @@
         --title-color: #ffffff;
         --button-bg: #ffffff;
         --button-text: #000000;
+        --map-border: #444;
       }
       body.light-mode {
         --bg-color: #ffffff;
@@ -30,6 +31,7 @@
         --title-color: #000000;
         --button-bg: #000000;
         --button-text: #ffffff;
+        --map-border: #ccc;
       }
       body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -42,6 +44,8 @@
         text-align: center;
         color: var(--title-color);
       }
+      
+      /* Original Button Theme Preserved */
       .button-container {
         display: flex;
         justify-content: center;
@@ -65,6 +69,23 @@
         text-align: center;
         margin-bottom: 15px;
       }
+      .sort-container select {
+        margin-right: 15px;
+        padding: 5px;
+        border-radius: 4px;
+      }
+      
+      /* Main Map Styles */
+      #mainMap {
+        height: 400px;
+        width: 100%;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        border: 2px solid var(--map-border);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        z-index: 1; 
+      }
+
       .storm-grid.one {
         display: grid;
         grid-template-columns: 1fr;
@@ -86,50 +107,52 @@
         border-radius: 12px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
       }
-      .highlight-none {
-        border-left: 5px solid transparent;
-      }
-      .highlight-green {
-        border-left: 5px solid green;
-      }
-      .highlight-yellow {
-        border-left: 5px solid yellow;
-      }
-      .highlight-orange {
-        border-left: 5px solid orange;
-      }
-      .highlight-red {
-        border-left: 5px solid red;
-      }
-      .highlight-pink {
-        border-left: 5px solid hotpink;
-      }
-      .highlight-purple {
-        border-left: 5px solid purple;
-      }
+      
+      .highlight-none { border-left: 5px solid transparent; }
+      .highlight-green { border-left: 5px solid green; }
+      .highlight-yellow { border-left: 5px solid yellow; }
+      .highlight-orange { border-left: 5px solid orange; }
+      .highlight-red { border-left: 5px solid red; }
+      .highlight-pink { border-left: 5px solid hotpink; }
+      .highlight-purple { border-left: 5px solid purple; }
+      
       .map-container {
         height: 300px;
         margin-top: 10px;
         border-radius: 8px;
         overflow: hidden;
         display: none;
+        border: 1px solid var(--map-border);
       }
       .update-timestamp {
         text-align: center;
         font-size: 0.9em;
-        margin-top: 10px;
+        margin-top: 15px;
         color: var(--text-color);
       }
     </style>
   </head>
   <body>
     <h1 id="mainTitle">Storm Intensity Viewer</h1>
+    
     <div class="button-container">
       <a href="https://wg-warn-dash.glitch.me/" class="button-home">Home</a>
       <button id="toggleThemeBtn">Toggle Theme</button>
       <button id="toggleColumnsBtn">Toggle Columns</button>
     </div>
+
     <div class="sort-container">
+      <label for="modelSelect">Formula Model:</label>
+      <select id="modelSelect">
+        <option value="base">Weather Goobers Severity Storm Score Index (V2)</option>
+        <option value="googlegemini">Gemini Probabilistic Convection Index (G-PCI)</option>
+        <option value="openaichatgpt">OpenAI Structural Severity Model (OA-SSM)</option>
+        <option value="claude">Anthropic Adaptive Storm Severity Index (A-ASSI)</option>
+        <option value="grok">xAI Enhanced Severity Storm Score Index (X-ESSI)</option>
+        <option value="microsoftcopliot">Copilot Severe Storm Dynamics Model (C-SSDM)</option>
+        <option value="metamuse">Meta Storm Probabilistic Model (M-SPM)</option>
+      </select>
+
       <label for="sortSelect">Sort by:</label>
       <select id="sortSelect">
         <option value="intensity">Storm Intensity</option>
@@ -138,90 +161,107 @@
         <option value="dbz">Max dBZ</option>
       </select>
     </div>
+
+    <div id="mainMap"></div>
+
     <div id="stormContainer" class="storm-grid one">Loading storm data...</div>
     <div id="updateTime" class="update-timestamp"></div>
+
     <script>
       const EXCLUDE_NEXRADS = [
-        "TUL",
-        "MCI",
-        "ICH",
-        "OKC",
-        "PHX",
-        "FLL",
-        "MIA",
-        "MCO",
-        "TPA",
-        "PBI",
-        "ATL",
-        "MDW",
-        "ORD",
-        "SDF",
-        "MSY",
-        "BOS",
-        "ADW",
-        "BWI",
-        "DCA",
-        "DTW",
-        "MSP",
-        "STL",
-        "CLT",
-        "RDU",
-        "EWR",
-        "LAS",
-        "JFK",
-        "CVG",
-        "LVE",
-        "CMH",
-        "DAY",
-        "PHL",
-        "PIT",
-        "SJU",
-        "MEM",
-        "BNA",
-        "DAL",
-        "DFW",
-        "HOU",
-        "IAH",
-        "SLC",
-        "IAD",
-        "MKE",
+        "TUL", "MCI", "ICH", "OKC", "PHX", "FLL", "MIA", "MCO", "TPA", "PBI", "ATL", 
+        "MDW", "ORD", "SDF", "MSY", "BOS", "ADW", "BWI", "DCA", "DTW", "MSP", "STL", 
+        "CLT", "RDU", "EWR", "LAS", "JFK", "CVG", "LVE", "CMH", "DAY", "PHL", "PIT", 
+        "SJU", "MEM", "BNA", "DAL", "DFW", "HOU", "IAH", "SLC", "IAD", "MKE",
       ];
       const ALWAYS_INCLUDE_NEXRADS = ["INX", "SRX", "SGF", "MLB", "TBW"];
 
-      // Toggle dark/light mode
-      document
-        .getElementById("toggleThemeBtn")
-        .addEventListener("click", () => {
-          document.body.classList.toggle("light-mode");
-          document.getElementById("mainTitle").style.color =
-            document.body.classList.contains("light-mode") ? "#000" : "#fff";
-        });
+      // Map Configuration
+      const DARK_TILE_URL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+      const LIGHT_TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+      let mainMap;
+      let mainMapMarkers = L.layerGroup();
+      let activeMiniMaps = {};
 
-      // Toggle between one, two, and three column layouts
       let currentColumnMode = 1;
-      document
-        .getElementById("toggleColumnsBtn")
-        .addEventListener("click", () => {
-          currentColumnMode = (currentColumnMode % 3) + 1;
-          const container = document.getElementById("stormContainer");
-          container.className = `storm-grid ${
-            ["one", "two", "three"][currentColumnMode - 1]
-          }`;
+      let rawStormData = [];
+      let stormData = [];
+
+      // -----------------------------------------------------------
+      // INITIALIZATION & UI
+      // -----------------------------------------------------------
+
+      const initMainMap = () => {
+        mainMap = L.map("mainMap").setView([39.8283, -98.5795], 4);
+        applyMapTheme(mainMap);
+        L.tileLayer.wms("https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q.cgi", {
+          layers: `nexrad-n0q-900913`,
+          format: "image/png",
+          transparent: true,
+          opacity: 0.7
+        }).addTo(mainMap);
+        mainMapMarkers.addTo(mainMap);
+      };
+
+      const applyMapTheme = (mapObj) => {
+        const isLight = document.body.classList.contains("light-mode");
+        const url = isLight ? LIGHT_TILE_URL : DARK_TILE_URL;
+        const attr = isLight ? '&copy; OpenStreetMap' : '&copy; OpenStreetMap & CartoDB';
+
+        mapObj.eachLayer((layer) => {
+          if (layer instanceof L.TileLayer && !(layer instanceof L.TileLayer.WMS)) {
+            mapObj.removeLayer(layer);
+          }
         });
 
-      // Convert wind direction in degrees to cardinal direction, reversed
+        L.tileLayer(url, { attribution: attr }).addTo(mapObj);
+        
+        mapObj.eachLayer(layer => {
+          if (layer instanceof L.TileLayer.WMS) layer.bringToFront();
+        });
+      };
+
+      document.getElementById("toggleThemeBtn").addEventListener("click", () => {
+        document.body.classList.toggle("light-mode");
+        document.getElementById("mainTitle").style.color =
+          document.body.classList.contains("light-mode") ? "#000" : "#fff";
+        
+        if (mainMap) applyMapTheme(mainMap);
+        Object.values(activeMiniMaps).forEach(mapObj => applyMapTheme(mapObj));
+      });
+
+      document.getElementById("toggleColumnsBtn").addEventListener("click", () => {
+        currentColumnMode = (currentColumnMode % 3) + 1;
+        const container = document.getElementById("stormContainer");
+        container.className = `storm-grid ${["one", "two", "three"][currentColumnMode - 1]}`;
+      });
+
+      document.getElementById("modelSelect").addEventListener("change", () => processAndRender());
+      document.getElementById("sortSelect").addEventListener("change", () => renderStorms());
+
       const getCardinalDirection = (deg) => {
         const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
         return dirs[Math.round(((deg + 180) % 360) / 45) % 8];
       };
 
-      // Convert knots to miles per hour
       const knotsToMph = (knots) => (Number(knots) * 1.15078 || 0).toFixed(1);
 
-      // Calculate storm intensity
-      const calculateIntensity = (p) => {
-        const tvs =
-          p.tvs === "TVS" ? 10 : p.tvs === "NONE" ? 0 : Number(p.tvs) || 0;
+      const getHighlightClass = (v) =>
+        v < 35 ? "highlight-none" : v < 50 ? "highlight-green" :
+        v < 70 ? "highlight-yellow" : v < 90 ? "highlight-orange" :
+        v < 110 ? "highlight-red" : v < 350 ? "highlight-pink" : "highlight-purple";
+
+      const getHighlightColor = (v) =>
+        v < 35 ? "transparent" : v < 50 ? "green" :
+        v < 70 ? "yellow" : v < 90 ? "orange" :
+        v < 110 ? "red" : v < 350 ? "hotpink" : "purple";
+
+      // -----------------------------------------------------------
+      // CALCULATIONS (MULTI-MODEL SUPPORT)
+      // -----------------------------------------------------------
+
+      const calculateIntensity = (p, model) => {
+        const tvs = p.tvs === "TVS" ? 10 : p.tvs === "NONE" ? 0 : Number(p.tvs) || 0;
         const meso = Number(p.meso) || 0;
         const posh = Number(p.posh) || 0;
         const poh = Number(p.poh) || 0;
@@ -230,101 +270,237 @@
         const dbz = Number(p.max_dbz) || 0;
         const top = Number(p.top) || 0;
 
-        const base = (posh * 12 + poh * 1.2 + size * 6 + dbz * 0.18) / 5;
-        const vil_factor =
-          vil < 15 ? 0.5 : vil <= 29 ? 0.75 : vil <= 49 ? 1.25 : 1.75;
-        const et_factor =
-          top >= 51.9
-            ? 2
-            : top >= 43.3
-            ? 1.5
-            : top >= 34.7
-            ? 1
-            : top >= 26.1
-            ? 0.5
-            : top >= 17.5
-            ? 0.25
-            : top >= 8.9
-            ? 0.15
-            : 0.1;
+        let base, vil_factor, et_factor, enhanced, tornado_factor, total, longevityBase, longevity;
 
-        const enhanced = base * (0.6 + vil_factor * 0.4) * (0.7 + et_factor * 0.3);
-        const tornado_factor = (tvs ? 25 : 0) + meso * 2.5;
-        const total = enhanced + tornado_factor;
-        const longevityBase = et_factor * 0.7 + vil_factor * 0.3;
+        switch(model) {
+          case 'googlegemini':
+            // Gemini Probabilistic Model: Heavy weighting on VIL and Echo Tops for longevity & severe potential
+            base = (posh * 15 + poh * 1.0 + size * 8 + dbz * 0.25) / 5;
+            vil_factor = vil < 20 ? 0.5 
+                        : vil <= 40 ? 1.0 
+                        : vil <= 60 ? 1.5 : 2.0; 
+            et_factor = top >= 50 ? 2.5 
+                        : top >= 40 ? 1.5 
+                        : top >= 30 ? 1 
+                        : top >= 20 ? 0.5 
+                        : 0.1;
+            enhanced = base * (0.5 + vil_factor * 0.5) * (0.6 + et_factor * 0.4);
+            tornado_factor = (tvs ? 30 : 0) + meso * 3.0;
+            total = enhanced + tornado_factor;
+            longevityBase = et_factor * 0.8 + vil_factor * 0.2;
+            break;
+            
+          case 'openaichatgpt':
+            // ChatGPT Structural Model: Emphasizes VIL, Echo Tops, and mesocyclone strength for true severe storm structure over hail-probability bias.
+            base = (posh * 6 + poh * 0.8 + size * 10 + dbz * 0.22) / 5;
+            vil_factor = vil < 15 ? 0.4 
+                        : vil <= 29 ? 0.7 
+                        : vil <= 49 ? 1.3 
+                        : 2.0;
+            et_factor = top >= 52 ? 2.2 
+                    : top >= 44 ? 1.7 
+                    : top >= 35 ? 1.2 
+                    : top >= 26 ? 0.7 
+                    : top >= 18 ? 0.3 
+                    : top >= 9  ? 0.15 
+                    : 0.08;
+            enhanced = base * (0.5 + vil_factor * 0.5) * (0.65 + et_factor * 0.35);
+            tornado_factor = (tvs ? 35 : 0) + meso * 4;
+            total = enhanced + tornado_factor;
+            longevityBase = et_factor * 0.65 + vil_factor * 0.35;
+            break;
+            
+          case 'claude':
+            // Claude Adaptive Model: Prioritizes rotation signatures and updraft strength (DBZ, Echo Tops) with balanced multi-hazard weighting
+            base = (posh * 8 + poh * 1 + size * 7 + dbz * 0.65) / 5.5;
+            vil_factor = vil < 15 ? 0.4 : 
+                        vil <= 29 ? 0.7 : 
+                        vil <= 49 ? 1.2 : 
+                        vil <= 69 ? 1.6 : 2.0;
+            et_factor = top >= 51.9 ? 2.2 :
+                        top >= 43.3 ? 1.6 : 
+                        top >= 34.7 ? 1.0 : 
+                        top >= 26.1 ? 0.6 : 
+                        top >= 17.5 ? 0.3 : 
+                        top >= 8.9 ? 0.15 : 0.1;
+            enhanced = base * (0.5 + vil_factor * 0.35) * (0.6 + et_factor * 0.4);
+            tornado_factor = (tvs ? 35 : 0) + meso * 3.5;
+            total = enhanced + tornado_factor;
+            longevityBase = et_factor * 0.65 + vil_factor * 0.35;
+            break;
+          case 'grok':
+            // Grok xAI Model: Heavy emphasis on maximum hail size + POSH for direct severe-hail damage potential, boosted TVS/mesocyclone for tornado probability, and refined VIL/ET weighting for updraft strength & longevity
+            base = (posh * 12 + poh * 1.0 + size * 15 + dbz * 0.30) / 5;
+            vil_factor = vil < 10 ? 0.40 : 
+                        vil <= 25 ? 0.70 : 
+                        vil <= 40 ? 1.20 : 
+                        vil <= 55 ? 1.60 : 1.90;
+            et_factor = top >= 55 ? 2.2 : 
+                        top >= 47 ? 1.8 : 
+                        top >= 38 ? 1.3 : 
+                        top >= 28 ? 0.8 : 
+                        top >= 18 ? 0.35 : 
+                        top >= 10 ? 0.20 : 0.10;
+            enhanced = base * (0.55 + vil_factor * 0.45) * (0.65 + et_factor * 0.35);
+            tornado_factor = (tvs ? 32 : 0) + meso * 3.0;
+            total = enhanced + tornado_factor;
+            longevityBase = et_factor * 0.65 + vil_factor * 0.35;
+            break;
 
-        const longevity = {
-          0.15: [35, 10, 5],
-          0.25: [50, 35, 10],
-          0.5: [75, 50, 35],
-          1: [95, 75, 50],
-          1.5: [100, 95, 75],
-          2: [100, 100, 95],
+          case 'microsoftcopliot':
+            // Copilot Severe Storm Dynamics Model (C‑SSDM): Emphasizes hail severity, deep convection, and rotational signatures for true severe potential
+            base = (posh * 15 + poh * 0.5 + size * 10 + dbz * 0.12) / 5;
+
+            vil_factor = vil < 10  ? 0.4  :
+                        vil <= 24 ? 0.7  :
+                        vil <= 44 ? 1.1  :
+                        vil <= 64 ? 1.5  :
+                        1.9;
+
+            et_factor = top < 8.9   ? 0.1 :
+                        top < 17.5  ? 0.2 :
+                        top < 26.1  ? 0.5 :
+                        top < 34.7  ? 0.9 :
+                        top < 43.3  ? 1.4 :
+                        top < 51.9  ? 1.9 :
+                        2.3;
+
+            enhanced = base * (0.5 + vil_factor * 0.5) * (0.6 + et_factor * 0.4);
+            tornado_factor = (tvs ? 35 : 0) + meso * 3.5;
+            total = enhanced + tornado_factor;
+            longevityBase = et_factor * 0.75 + vil_factor * 0.25;
+            break;
+          case 'metamuse':
+            // Muse Spark Probabilistic Model: Heavy weighting on POSH and hail size for severe core, VIL and Echo Top smooth multipliers for longevity & severe potential
+            posh_n = Math.max(0, Math.min(100, posh)) / 100;
+            poh_n = Math.max(0, Math.min(100, poh)) / 100;
+            size_n = Math.min(size, 3.0) / 3.0;
+            dbz_n = Math.max(0, Math.min((dbz - 45) / 25, 1));
+
+            base = 100 * (posh_n * 0.55 + size_n * 0.30 + dbz_n * 0.12 + poh_n * 0.03);
+
+            vil_factor = vil < 15? 0.70
+                        : vil < 25? 0.90
+                        : vil < 40? 1.15
+                        : vil < 55? 1.40
+                        : 1.65;
+
+            et_factor = top < 20? 0.50
+                        : top < 30? 0.80
+                        : top < 40? 1.10
+                        : top < 50? 1.45
+                        : 1.75;
+
+            enhanced = base * (0.55 + vil_factor * 0.45) * (0.60 + et_factor * 0.40);
+            tornado_factor = (tvs? 35 : 0) + Math.min(meso, 10) * 2.2;
+            total = Math.min(100, enhanced * 0.78 + tornado_factor);
+            p_severe = 100 / (1 + Math.exp(-0.09 * (total - 55)));
+            longevityBase = et_factor * 0.60 + vil_factor * 0.40;
+            break;
+          case 'base':
+          default:
+            // The exact original base formula
+            base = (posh * 12 + poh * 1.2 + size * 6 + dbz * 0.18) / 5;
+            vil_factor = vil < 15 ? 0.5 
+                        : vil <= 29 ? 0.75 
+                        : vil <= 49 ? 1.25 : 1.75;
+            et_factor = top >= 51.9 ? 2 
+                        : top >= 43.3 ? 1.5 
+                        : top >= 34.7 ? 1 
+                        : top >= 26.1 ? 0.5 
+                        : top >= 17.5 ? 0.25 
+                        : top >= 8.9 ? 0.15 
+                        : 0.1;
+            enhanced = base * (0.6 + vil_factor * 0.4) * (0.7 + et_factor * 0.3);
+            tornado_factor = (tvs ? 25 : 0) + meso * 2.5;
+            total = enhanced + tornado_factor;
+            longevityBase = et_factor * 0.7 + vil_factor * 0.3;
+            break;
+        }
+
+        // Standard longevity dictionary (used by all models unless overridden inside the switch)
+        longevity = {
+          0.15: [35, 10, 5], 0.25: [50, 35, 10], 0.5: [75, 50, 35],
+          1: [95, 75, 50], 1.5: [100, 95, 75], 2: [100, 100, 95],
         }[longevityBase] || [10, 5, 1];
 
         return {
           total_intensity: Number(total.toFixed(2)),
           tornado_index: Number(tornado_factor.toFixed(2)),
-          longevity15: longevity[0],
-          longevity30: longevity[1],
-          longevity60: longevity[2],
+          longevity15: longevity[0] || 10,
+          longevity30: longevity[1] || 5,
+          longevity60: longevity[2] || 1,
         };
       };
 
-      // Determine highlight color based on intensity
-      const getHighlight = (v) =>
-        v < 35
-          ? "highlight-none"
-          : v < 50
-          ? "highlight-green"
-          : v < 70
-          ? "highlight-yellow"
-          : v < 90
-          ? "highlight-orange"
-          : v < 110
-          ? "highlight-red"
-          : v < 350
-          ? "highlight-pink"
-          : "highlight-purple";
+      // -----------------------------------------------------------
+      // RENDERING
+      // -----------------------------------------------------------
 
-      // Create map for storm location
-      const createMap = (id, coords) => {
+      const updateMainMap = () => {
+        mainMapMarkers.clearLayers();
+        
+        if (stormData.length > 0) {
+           const lats = stormData.map(s => s.coords[1]);
+           const lngs = stormData.map(s => s.coords[0]);
+           const bounds = L.latLngBounds(L.latLng(Math.min(...lats), Math.min(...lngs)), L.latLng(Math.max(...lats), Math.max(...lngs)));
+           mainMap.fitBounds(bounds, { padding: [50, 50], maxZoom: 8 });
+        }
+
+        stormData.forEach(s => {
+          const color = getHighlightColor(s.total_intensity);
+          if (color === "transparent") return; // don't map extremely weak storms
+
+          const marker = L.circleMarker([s.coords[1], s.coords[0]], {
+            radius: 8, fillColor: color, color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.9
+          });
+          
+          marker.bindPopup(`
+            <strong>Storm ${s.props.storm_id || "N/A"}</strong><br>
+            Intensity: <b>${s.total_intensity}</b><br>
+            Tornado Index: ${s.tornado_index}<br>
+            Max Hail: ${s.props.max_size || 0} in
+          `);
+          
+          mainMapMarkers.addLayer(marker);
+        });
+      };
+
+      const createMiniMap = (id, coords) => {
         if (L.DomUtil.get(id)._leaflet_id) {
           L.DomUtil.get(id)._leaflet_id = null;
         }
         const map = L.map(id).setView([coords[1], coords[0]], 8);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(
-          map
-        );
-        L.tileLayer
-          .wms("https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q.cgi", {
-            layers: `nexrad-n0q-900913`,
-            format: "image/png",
-            transparent: true,
-          })
-          .addTo(map);
+        applyMapTheme(map);
+        L.tileLayer.wms("https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0q.cgi", {
+            layers: `nexrad-n0q-900913`, format: "image/png", transparent: true,
+        }).addTo(map);
         L.marker([coords[1], coords[0]]).addTo(map);
+        activeMiniMaps[id] = map;
       };
 
-      // Render storm cards to DOM
       const renderStorms = () => {
         const sort = document.getElementById("sortSelect").value;
         const c = document.getElementById("stormContainer");
         c.innerHTML = "";
+        activeMiniMaps = {}; 
 
         const sorted = [...stormData].sort((a, b) => {
           if (sort === "tornado") return b.tornado_index - a.tornado_index;
-          if (sort === "hail")
-            return (b.props.max_size || 0) - (a.props.max_size || 0);
-          if (sort === "dbz")
-            return (b.props.max_dbz || 0) - (a.props.max_dbz || 0);
+          if (sort === "hail") return (b.props.max_size || 0) - (a.props.max_size || 0);
+          if (sort === "dbz") return (b.props.max_dbz || 0) - (a.props.max_dbz || 0);
           return b.total_intensity - a.total_intensity;
         });
+
+        if (sorted.length === 0) {
+            c.innerHTML = "<p>No active severe storms meet the criteria currently.</p>";
+            return;
+        }
 
         sorted.forEach((s, i) => {
           const p = s.props;
           const div = document.createElement("div");
-          div.className = `storm ${getHighlight(s.total_intensity)}`;
+          div.className = `storm ${getHighlightClass(s.total_intensity)}`;
           const mid = `map-${i}`;
           const tid = `toggle-${mid}`;
 
@@ -333,86 +509,76 @@
             <strong>NEXRAD:</strong> K${p.nexrad || "N/A"}<br>
             <strong>Storm Intensity Index:</strong> ${s.total_intensity}<br>
             <strong>Tornado Composite Index:</strong> ${s.tornado_index}<br>
-            <strong>Direction:</strong> ${
-              p.drct ? getCardinalDirection(p.drct) : "N/A"
-            }<br>
-            <strong>Speed:</strong> ${
-              p.sknt ? knotsToMph(p.sknt) : "N/A"
-            } mph<br>
+            <strong>Direction:</strong> ${p.drct ? getCardinalDirection(p.drct) : "N/A"}<br>
+            <strong>Speed:</strong> ${p.sknt ? knotsToMph(p.sknt) : "N/A"} mph<br>
             <strong>Likelihood of Severe Hail:</strong> ${p.posh || 0}%<br>
             <strong>Likelihood of Hail:</strong> ${p.poh || 0}%<br>
             <strong>Max Hail Size:</strong> ${p.max_size || 0} in<br>
             <strong>Max dBZ:</strong> ${p.max_dbz || 0} dBZ<br>
-            <strong>Vertically Integrated Liquid:</strong> ${
-              p.vil || 0
-            } kg/m<sup>2</sup><br>
-            <strong>Tornado Vortex Signature Strength:</strong> ${
-              p.tvs || 0
-            }<br>
+            <strong>Vertically Integrated Liquid:</strong> ${p.vil || 0} kg/m<sup>2</sup><br>
+            <strong>Tornado Vortex Signature Strength:</strong> ${p.tvs || 0}<br>
             <strong>Mesocyclone Strength:</strong> ${p.meso || 0}<br>
             <strong>Echo Top Height:</strong> ${p.top || 0} kft<br>
-            <strong>15 Minute Maintenance:</strong> ${s.longevity15}%<br>
-            <strong>30 Minute Maintenance:</strong> ${s.longevity30}%<br>
-            <strong>60 Minute Maintenance:</strong> ${s.longevity60}%<br>
-            <button id="${tid}">Show Map</button>
+            <strong>15 Min Maint.:</strong> ${s.longevity15}% | 
+            <strong>30 Min:</strong> ${s.longevity30}% | 
+            <strong>60 Min:</strong> ${s.longevity60}%<br>
+            <button id="${tid}" style="margin-top:10px; padding:5px 10px; cursor:pointer;">Toggle Storm Map</button>
             <div id="${mid}" class="map-container"></div>
           `;
 
           c.appendChild(div);
           document.getElementById(tid).addEventListener("click", () => {
             const mapDiv = document.getElementById(mid);
-            mapDiv.style.display =
-              mapDiv.style.display === "block" ? "none" : "block";
-            if (mapDiv.style.display === "block") createMap(mid, s.coords);
+            const isVisible = mapDiv.style.display === "block";
+            mapDiv.style.display = isVisible ? "none" : "block";
+            
+            if (!isVisible) {
+                createMiniMap(mid, s.coords);
+            } else {
+                delete activeMiniMaps[mid];
+            }
           });
         });
       };
 
-      // Update last refresh time
-      const updateTime = () => {
-        const now = new Date();
-        document.getElementById(
-          "updateTime"
-        ).textContent = `Last updated at ${now.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}`;
+      const processAndRender = () => {
+        const activeModel = document.getElementById("modelSelect").value;
+        
+        stormData = rawStormData
+          .map((f) => {
+            const props = f.properties;
+            const coords = f.geometry.coordinates;
+            const result = calculateIntensity(props, activeModel);
+            return { props, coords, ...result };
+          })
+          .filter((s) => s.total_intensity >= 20 && (s.props.range || 0) < 130);
+          
+        renderStorms();
+        updateMainMap();
       };
 
-      // Load storm data and apply transformations
-      let stormData = [];
       const loadStormData = () => {
         fetch("https://mesonet.agron.iastate.edu/geojson/nexrad_attr.py")
           .then((res) => res.json())
           .then((data) => {
-            stormData = data.features
-              .filter((f) => {
-                const nexrad = (f.properties.nexrad || "").toUpperCase();
-                return (
-                  ALWAYS_INCLUDE_NEXRADS.includes(nexrad) ||
-                  !EXCLUDE_NEXRADS.includes(nexrad)
-                );
-              })
-              .map((f) => {
-                const props = f.properties;
-                const coords = f.geometry.coordinates;
-                const result = calculateIntensity(props);
-                return { props, coords, ...result };
-              })
-              .filter(
-                (s) => s.total_intensity >= 25 && (s.props.range || 0) < 130
-              );
-
-            renderStorms();
-            updateTime();
+            rawStormData = data.features.filter((f) => {
+              const nexrad = (f.properties.nexrad || "").toUpperCase();
+              return ALWAYS_INCLUDE_NEXRADS.includes(nexrad) || !EXCLUDE_NEXRADS.includes(nexrad);
+            });
+            
+            processAndRender();
+            
+            const now = new Date();
+            document.getElementById("updateTime").textContent = 
+                `Last updated at ${now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
           })
           .catch((e) => {
-            document.getElementById("stormContainer").innerText =
-              "Failed to load storm data.";
+            document.getElementById("stormContainer").innerText = "Failed to load storm data.";
             console.error(e);
           });
       };
 
+      initMainMap();
       loadStormData();
       setInterval(loadStormData, 120000);
     </script>
