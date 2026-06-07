@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=309, initial-scale=1.0" />
+  <title>Weather Goobers - Smart Auto-Routing Cameras</title>
+  
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,400;0,700;0,900;1,900&family=Roboto:wght@400;700;900&display=swap');
+    
+    body {
+      margin: 0; background: transparent; font-family: 'Roboto Condensed', sans-serif;
+      overflow: hidden; color: white;
+    }
+
+    .panel-wrapper {
+      width: 309px; height: 913px; display: flex; flex-direction: column;
+      background: linear-gradient(180deg, rgba(15,15,15,0.95) 0%, rgba(5,5,5,0.95) 100%);
+      border-left: 2px solid rgba(255, 255, 255, 0.1);
+      box-shadow: -5px 0 15px rgba(0,0,0,0.8);
+    }
+
+    .header {
+      padding: 12px 0; text-align: center; border-bottom: 2px solid rgba(255,255,255,0.2);
+      transition: background 0.8s ease;
+    }
+    
+    .bg-cloud-watching { background: linear-gradient(135deg, #4A3B82 0%, #2A1B52 100%); }
+    .bg-active { background: linear-gradient(135deg, #990000 0%, #550000 100%); }
+
+    .header-title { font-weight: 900; font-size: 24px; letter-spacing: 2px; text-transform: uppercase; }
+    .header-sub { font-weight: 700; font-size: 12px; color: #cbd5e1; letter-spacing: 1px; text-transform: uppercase; transition: color 0.3s; }
+
+    /* --- FADING CONTAINER LOGIC --- */
+    .cam-container {
+      flex-grow: 1; display: flex; flex-direction: column; padding: 10px; gap: 12px; justify-content: flex-start;
+      opacity: 1;
+      transition: opacity 0.6s ease-in-out;
+    }
+
+    .fade-out {
+      opacity: 0 !important;
+    }
+
+    .cam-box {
+      width: 100%; background: #000; border: 1px solid #333; border-radius: 4px; overflow: hidden;
+      position: relative; box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    }
+
+    .video-wrapper { position: relative; width: 100%; padding-top: 56.25%; }
+    
+    video, img.refreshable-img {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
+    }
+
+    .cam-label {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.8); padding: 4px 8px; font-size: 13px; font-weight: 700;
+      text-transform: uppercase; border-top: 1px solid rgba(255,255,255,0.2);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+
+    .risk-badge { font-size: 11px; padding: 2px 6px; border-radius: 3px; font-weight: 900; color: black; text-shadow: none; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    .status-dot { color: #FF4444; font-size: 10px; animation: pulse 2s infinite; }
+    
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+    .discord-banner {
+      background: #5865F2; padding: 15px 10px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; border-top: 2px solid rgba(255,255,255,0.2);
+    }
+    .discord-title { font-weight: 900; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
+    .discord-link { font-family: 'Roboto', monospace; font-weight: 700; font-size: 17px; background: rgba(0,0,0,0.3); padding: 4px 12px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+  <div class="panel-wrapper">
+    <div class="header bg-cloud-watching" id="camHeader">
+      <div class="header-title">LIVE CAMS</div>
+      <div class="header-sub" id="headerSub">Cycling All Cameras</div>
+    </div>
+
+    <div class="cam-container" id="camContainer"></div>
+
+    <div class="discord-banner">
+      <div class="discord-title">JOIN WEATHER GOOBERS</div>
+      <div class="discord-link">discord.gg/ZmR9jqwFuj</div>
+    </div>
+  </div>
+
+  <script>
+    const proxyBase = "https://peoc-proxy.onrender.com/stream?url=";
+    const ardotProxy = "https://peoc-proxy.onrender.com/ardot/";
+
+    // ==========================================
+    // THE CAMERA DATABASE
+    // ==========================================
+    const cameraDB = [
+      { id: "cam_col", name: "Columbia (MODOT)",       type: "video", lon: -92.291930, lat: 38.961390, zone: "MOC017", url: `${proxyBase}${encodeURIComponent('https://sfs02-traveler.modot.mo.gov/rtplive/MODOT_CAM_322/playlist.m3u8')}` },
+      { id: "cam_dod", name: "Dodge City (KSDOT)",     type: "image", lon: -100.07930, lat: 37.718692, zone: "KSC009", url: "https://kscam.carsprogram.org/snapshots/GEN_6-400-1193-2US-400atUS-56.jpeg" },
+      { id: "cam_fay", name: "Fayetteville (ARDOT)",   type: "video", lon: -94.192689, lat: 36.015047, zone: "ARC143", url: `${ardotProxy}317` },
+      { id: "cam_fts", name: "Fort Smith (ARDOT)",     type: "video", lon: -94.364989, lat: 35.359292, zone: "ARC131", url: `${ardotProxy}454` },
+      { id: "cam_gar", name: "Garden City (KSDOT)",    type: "image", lon: -100.83873, lat: 37.969660, zone: "KSC055", url: "https://kscam.carsprogram.org/snapshots/GEN_6-050-0710-2-US-50NB&Spruce-GardenCity.jpeg" },
+      { id: "cam_god", name: "Goodland (KSDOT)",       type: "image", lon: -101.72586, lat: 39.328500, zone: "KSC181", url: "https://kscam.carsprogram.org/snapshots/GEN_3-070-0170-2-I-70atGoodlandexit17.jpeg" },
+      { id: "cam_hay", name: "Hays (KSDOT)",           type: "image", lon: -99.317609, lat: 38.898515, zone: "KSC041", url: "https://kscam.carsprogram.org/snapshots/GEN_3-070-1590-2-I-70atHaysexit159.jpeg" },
+      { id: "cam_hts", name: "Hot Springs (ARDOT)",    type: "video", lon: -93.060814, lat: 34.464997, zone: "ARC051", url: `${ardotProxy}155` },
+      { id: "cam_jon", name: "Jonesboro (ARDOT)",      type: "video", lon: -90.636453, lat: 35.806619, zone: "ARC035", url: `${ardotProxy}700` },
+      { id: "cam_jpl", name: "Joplin (MODOT)",         type: "video", lon: -94.478097, lat: 37.054721, zone: "MOC097", url: `${proxyBase}${encodeURIComponent('https://s2.ozarkstrafficoneview.com/rtplive/CAM1018/playlist.m3u8')}` },
+      { id: "cam_kcm", name: "Kansas City (MODOT)",    type: "video", lon: -94.559000, lat: 39.095600, zone: "MOC095", url: `${proxyBase}${encodeURIComponent('https://traveler.modot.org/tisvc/api/Tms/CameraStream/M070EBC-08-LQ')}`},
+      { id: "cam_lzk", name: "Little Rock (ARDOT)",    type: "video", lon: -92.309556, lat: 34.743889, zone: "ARC119", url: `${ardotProxy}355` },
+      { id: "cam_mhm", name: "Mountain Home (ARDOT)",  type: "video", lon: -92.356820, lat: 36.353535, zone: "ARC005", url: `${ardotProxy}377` },
+      { id: "ok_1597231543",name: "Oklahoma City (OKDOT)",type: "video", lon: -97.57730, lat: 35.37111, zone: "OKC109", url: null },
+      { id: "cam_rog", name: "Rogers (ARDOT)",         type: "video", lon: -94.184358, lat: 36.334653, zone: "ARC007", url: `${ardotProxy}347` },
+      { id: "cam_rol", name: "Rolla (MODOT)",          type: "image", lon: -91.788359, lat: 37.954265, zone: "MOC115", url: "https://traveler.modot.org/traffic_camera_snapshots/I-44@RollaHighwayPatrol/I-44@RollaHighwayPatrol.jpg" },
+      { id: "cam_stl", name: "Saint Louis (MODOT)",    type: "video", lon: -90.211910, lat: 38.612480, zone: "MOC189", url: `${proxyBase}${encodeURIComponent('https://sfs02-traveler.modot.mo.gov/rtplive/MODOT_CAM_236/playlist.m3u8')}` },
+      { id: "cam_sgf", name: "Springfield (MODOT)",    type: "video", lon: -93.277692, lat: 37.156869, zone: "MOC077", url: `${proxyBase}${encodeURIComponent('https://s2.ozarkstrafficoneview.com/rtplive/CAM53/playlist.m3u8')}` },
+      { id: "cam_top", name: "Topeka (KSDOT)",         type: "image", lon: -95.723355, lat: 39.066925, zone: "KSC177", url: "https://kscam.carsprogram.org/snapshots/GEN_1-070-3581-2-I-70atGageBlvdE.jpeg" },
+      { id: "ok_8",    name: "Tulsa (OKDOT)",          type: "video", lon: -95.826574, lat: 36.161382, zone: "OKC143", url: null },
+      { id: "cam_txr", name: "Texarkana (ARDOT)",      type: "video", lon: -94.020391, lat: 33.472862, zone: "ARC097", url: `${ardotProxy}178` },
+      { id: "cam_wic", name: "Wichita (KSDOT)",        type: "image", lon: -97.317199, lat: 37.678839, zone: "KSC171", url: "https://kscam.carsprogram.org/snapshots/GEN_5-054-2168-2-US-54atI-135W.jpeg" },
+      { id: "cam_wme", name: "West Memphis (ARDOT)",   type: "video", lon: -90.089361, lat: 35.153528, zone: "ARC037", url: `${ardotProxy}386` },
+    ];
+
+    // ==========================================
+    // ODOT CAMERA LOADER
+    // ==========================================
+    async function loadODOTCameras() {
+      try {
+        const res = await fetch(
+          "https://peoc-proxy.onrender.com/ok/CameraPoles?filter=" +
+          encodeURIComponent(JSON.stringify({
+            include: [{ relation: "mapCameras", scope: { include: "streamDictionary" } }]
+          }))
+        );
+        const poles = await res.json();
+
+        poles.forEach(pole => {
+          (pole.mapCameras || []).forEach(cam => {
+            const entry = cameraDB.find(c => c.id === `ok_${cam.id}`);
+            if (!entry || !cam.streamDictionary?.streamSrc) return;
+            entry.url = `${proxyBase}${encodeURIComponent(cam.streamDictionary.streamSrc)}`;
+          });
+        });
+
+        // Remove any declared ODOT cameras that didn't get a URL resolved
+        // (protects against bad IDs or out-of-service cameras)
+        const unresolved = cameraDB.filter(c => c.id.startsWith("ok_") && !c.url);
+        if (unresolved.length) {
+          console.warn("ODOT: could not resolve URLs for:", unresolved.map(c => c.id));
+          unresolved.forEach(c => cameraDB.splice(cameraDB.indexOf(c), 1));
+        }
+      } catch(e) {
+        console.error("Failed to load ODOT cameras", e);
+      }
+    }
+
+    const spcBase = "https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson";
+    const nwsUrl = "https://api.weather.gov/alerts/active?area=AR,KS,MO,OK";
+    let globalSpcFeatures = [];
+    let activeHlsInstances = []; 
+    let warningCamerasMap = new Map(); // Maps camera ID to warning data
+    let hasActiveWarnings = false; // Track if any TOR/DESTRUCTIVE SVR warnings exist
+    
+    let isTrackingMode = false;
+    let isWarningLocked = false; // True when locked on warning cameras
+    let cycleIndex = 0;
+    let hasTornado = false;
+    let hasDestructiveSvr = false;
+
+    function pointInPolygon(point, vs) {
+      let x = point[0], y = point[1];
+      let inside = false;
+      for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+        let xi = vs[i][0], yi = vs[i][1];
+        let xj = vs[j][0], yj = vs[j][1];
+        let intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+      }
+      return inside;
+    }
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 3959; // Earth's radius in miles
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    function calculateRiskForCamera(cam) {
+      cam.riskDn = 0; 
+      cam.riskLabel = "NO THREAT";
+      cam.riskColor = "#333";
+      cam.fontColor = "white";
+
+      if (!globalSpcFeatures.length) return cam;
+
+      for (const f of globalSpcFeatures) {
+        let props = f.properties;
+        if (!props || props.DN <= cam.riskDn) continue; 
+        
+        let isInside = false;
+        let type = f.geometry.type;
+        let coords = f.geometry.coordinates;
+
+        if (type === 'Polygon') {
+          if (pointInPolygon([cam.lon, cam.lat], coords[0])) isInside = true; 
+        } else if (type === 'MultiPolygon') {
+          for (let poly of coords) {
+            if (pointInPolygon([cam.lon, cam.lat], poly[0])) { isInside = true; break; }
+          }
+        }
+
+        if (isInside) {
+          cam.riskDn = props.DN;
+          cam.riskLabel = props.LABEL2 || props.LABEL;
+          cam.riskColor = props.fill || "#555";
+          cam.fontColor = (cam.riskDn >= 5) ? "#FFFFFF" : "#000000"; 
+        }
+      }
+
+      const upperLabel = cam.riskLabel.toUpperCase();
+      if(upperLabel.includes("MARGINAL")) cam.riskLabel = "MRGL";
+      if(upperLabel.includes("SLIGHT")) cam.riskLabel = "SLGT";
+      if(upperLabel.includes("ENHANCED")) cam.riskLabel = "ENH";
+      if(upperLabel.includes("MODERATE")) cam.riskLabel = "MDT";
+      if(upperLabel.includes("HIGH")) cam.riskLabel = "HIGH";
+      if(upperLabel.includes("THUNDERSTORM")) cam.riskLabel = "TSTM";
+
+      return cam;
+    }
+
+    // --- NEW: FADE CONTROLLER ---
+    function fadeAndRender() {
+      const container = document.getElementById("camContainer");
+      
+      // 1. Trigger CSS Fade Out
+      container.classList.add("fade-out");
+
+      // 2. Wait for the fade to finish (600ms), then swap DOM
+      setTimeout(() => {
+        renderCameras();
+        // 3. Remove class to trigger Fade In
+        container.classList.remove("fade-out");
+      }, 600);
+    }
+
+    function renderCameras() {
+      const container = document.getElementById("camContainer");
+      
+      activeHlsInstances.forEach(hls => hls.destroy());
+      activeHlsInstances = [];
+      container.innerHTML = ""; 
+
+      const sortedCams = cameraDB.map(calculateRiskForCamera).sort((a, b) => b.riskDn - a.riskDn);
+      let selectedCams = [];
+
+      if (isWarningLocked && warningCamerasMap.size > 0) {
+        // Warning locked mode: show warning cameras first, sorted by distance
+        const warningCams = Array.from(warningCamerasMap.values()).map(w => w.camera);
+        
+        if (warningCams.length === 1) {
+          const primaryCam = warningCams[0];
+          selectedCams.push(primaryCam);
+          
+          // Fill rest with closest cameras
+          const distances = cameraDB
+            .filter(c => c.id !== primaryCam.id)
+            .map(c => ({
+              cam: c,
+              dist: calculateDistance(primaryCam.lat, primaryCam.lon, c.lat, c.lon)
+            }))
+            .sort((a, b) => a.dist - b.dist);
+          
+          for (let i = 0; i < Math.min(3, distances.length); i++) {
+            selectedCams.push(distances[i].cam);
+          }
+        } else {
+          // Multiple warning cameras: show all warnings first, then closest others
+          selectedCams = warningCams.slice(0, 4);
+          
+          if (selectedCams.length < 4) {
+            const warningIds = new Set(warningCams.map(c => c.id));
+            const otherCams = cameraDB.filter(c => !warningIds.has(c.id));
+            
+            for (let i = 0; i < Math.min(4 - selectedCams.length, otherCams.length); i++) {
+              // Get closest to any warning camera
+              let closest = null;
+              let minDist = Infinity;
+              
+              for (const other of otherCams) {
+                for (const warn of warningCams) {
+                  const dist = calculateDistance(warn.lat, warn.lon, other.lat, other.lon);
+                  if (dist < minDist) {
+                    minDist = dist;
+                    closest = other;
+                  }
+                }
+              }
+              
+              if (closest) {
+                selectedCams.push(closest);
+                otherCams.splice(otherCams.indexOf(closest), 1);
+              }
+            }
+          }
+        }
+      } else if (isTrackingMode) {
+        // Tracking mode: cycle through ONLY the highest available SPC risk cameras
+        const maxDn = sortedCams[0]?.riskDn || 0;
+        const highestRiskCams = sortedCams.filter(cam => cam.riskDn === maxDn);
+        
+        for (let i = 0; i < Math.min(4, highestRiskCams.length); i++) {
+          selectedCams.push(highestRiskCams[(cycleIndex + i) % highestRiskCams.length]);
+        }
+      } else {
+        // Normal cycling mode
+        for (let i = 0; i < Math.min(4, sortedCams.length); i++) {
+          selectedCams.push(sortedCams[(cycleIndex + i) % sortedCams.length]);
+        }
+      }
+
+      selectedCams.forEach((cam, index) => {
+        const camId = `video_${index}`;
+        const isImg = cam.type === 'image';
+        
+        const mediaHtml = isImg 
+          ? `<img src="${cam.url}?t=${new Date().getTime()}" data-basesrc="${cam.url}" class="refreshable-img" />`
+          : `<video id="${camId}" muted autoplay playsinline></video>`;
+
+        const html = `
+          <div class="cam-box">
+            <div class="video-wrapper">${mediaHtml}</div>
+            <div class="cam-label">
+              <span>${cam.name}</span>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="risk-badge" style="background:${cam.riskColor}; color:${cam.fontColor};">${cam.riskLabel}</span>
+                <span class="status-dot">●</span>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', html);
+
+        if (!isImg) {
+          initHLS(camId, cam.url);
+        }
+      });
+    }
+
+    function initHLS(videoId, streamUrl) {
+      const video = document.getElementById(videoId);
+      if (!video) return;
+
+      if (Hls.isSupported()) {
+        const hls = new Hls({ manifestLoadingMaxRetry: 5, manifestLoadingRetryDelay: 2000 });
+        hls.loadSource(streamUrl);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(e => {}));
+        activeHlsInstances.push(hls);
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = streamUrl;
+        video.addEventListener('loadedmetadata', () => video.play());
+      }
+    }
+
+    function refreshImages() {
+      const images = document.querySelectorAll('.refreshable-img');
+      images.forEach(img => {
+        const baseSrc = img.getAttribute('data-basesrc');
+        const separator = baseSrc.includes('?') ? '&' : '?';
+        img.src = `${baseSrc}${separator}t=${new Date().getTime()}`;
+      });
+    }
+
+    // --- EXTRACT DAMAGE THREAT TAGS FROM ALERTS ---
+    function getAlertDamageThreat(alertProps) {
+      if (alertProps.damageThreat && Array.isArray(alertProps.damageThreat) && alertProps.damageThreat.length > 0) {
+        return alertProps.damageThreat[0].toUpperCase();
+      }
+      return "";
+    }
+
+    // --- CHECK WARNINGS FOR CAMERAS WITHIN WARNING POLYGONS ---
+    // Returns true if any relevant warnings were found
+    async function checkCameraWarnings() {
+      warningCamerasMap.clear();
+      hasActiveWarnings = false;
+      
+      try {
+        // Fetch all active warnings
+        const res = await fetch(nwsUrl, { headers: { 'User-Agent': 'WeatherGoobersStream/1.0' } });
+        const data = await res.json();
+        
+        console.log(`checkCameraWarnings: Fetched ${data.features?.length || 0} total alerts`);
+        
+        if (!data.features || data.features.length === 0) {
+          console.log("No warnings detected");
+          return false;
+        }
+
+        // Filter to Tornado Warnings and Destructive SVRs (same as bottom third)
+        const relevantWarnings = data.features.filter(f => {
+          const event = f.properties.event;
+          const threat = getAlertDamageThreat(f.properties);
+          return event === "Tornado Warning" || (event === "Severe Thunderstorm Warning" && threat === "DESTRUCTIVE");
+        });
+
+        if (relevantWarnings.length > 0) {
+          hasActiveWarnings = true;
+          console.log(`Found ${relevantWarnings.length} relevant warnings (TOR or DESTRUCTIVE SVR)`);
+          
+          // Check which cameras fall within warning polygons
+          for (const cam of cameraDB) {
+            for (const warning of relevantWarnings) {
+              let isInside = false;
+              
+              // Check if camera coordinates fall within warning geometry
+              if (warning.geometry) {
+                const type = warning.geometry.type;
+                const coords = warning.geometry.coordinates;
+                
+                if (type === 'Polygon') {
+                  if (pointInPolygon([cam.lon, cam.lat], coords[0])) {
+                    isInside = true;
+                  }
+                } else if (type === 'MultiPolygon') {
+                  for (let poly of coords) {
+                    if (pointInPolygon([cam.lon, cam.lat], poly[0])) {
+                      isInside = true;
+                      break;
+                    }
+                  }
+                }
+              }
+              
+              if (isInside) {
+                warningCamerasMap.set(cam.id, { 
+                  camera: cam, 
+                  eventType: warning.properties.event,
+                  threat: getAlertDamageThreat(warning.properties)
+                });
+                console.log(`Camera ${cam.name} is within warning polygon`);
+                break; // Found a warning for this camera, move to next camera
+              }
+            }
+          }
+          
+          console.log(`${warningCamerasMap.size} cameras found within warning areas`);
+        }
+        
+        return hasActiveWarnings;
+        
+      } catch (e) {
+        console.error("Failed to check camera warnings", e);
+        return false;
+      }
+    }
+
+    function updateTrackingUI() {
+      const headerSub = document.getElementById("headerSub");
+      const camHeader = document.getElementById("camHeader");
+
+      console.log(`updateTrackingUI: isWarningLocked=${isWarningLocked}, warningCameras=${warningCamerasMap.size}, isTrackingMode=${isTrackingMode}`);
+
+      if (isWarningLocked && warningCamerasMap.size > 0) {
+        camHeader.classList.replace("bg-cloud-watching", "bg-active");
+        const count = warningCamerasMap.size;
+        headerSub.textContent = count === 1 ? "WARNING LOCKED" : `${count} WARNINGS ACTIVE`;
+      } else if (isTrackingMode) {
+        camHeader.classList.replace("bg-cloud-watching", "bg-active");
+        headerSub.textContent = warningCamerasMap.size === 0 ? "WARNING - CYCLING THREATS" : "Targeting Highest Threat";
+      } else {
+        camHeader.classList.replace("bg-active", "bg-cloud-watching");
+        headerSub.textContent = "Cycling All Cameras";
+      }
+    }
+
+    // --- FETCH WARNINGS FOR ALERT-DRIVEN MODE ---
+    async function fetchWarnings() {
+      const prevWarningState = hasActiveWarnings;
+      const hasWarningsActive = await checkCameraWarnings();
+      const hasCamerasInWarnings = warningCamerasMap.size > 0;
+      
+      console.log(`fetchWarnings: hasWarningsActive=${hasWarningsActive}, hasCamerasInWarnings=${hasCamerasInWarnings}`);
+      
+      // Update tracking states based on warning detection
+      const prevTrackingMode = isTrackingMode;
+      const prevWarningLocked = isWarningLocked;
+      
+      if (hasWarningsActive) {
+        isTrackingMode = true;
+        isWarningLocked = hasCamerasInWarnings;
+      } else {
+        isWarningLocked = false;
+        // isTrackingMode will be controlled by SPC outlook
+        isTrackingMode = false;
+      }
+      
+      // Update UI if state changed
+      if (prevTrackingMode !== isTrackingMode || prevWarningLocked !== isWarningLocked) {
+        console.log(`State changed: tracking ${prevTrackingMode}->${isTrackingMode}, locked ${prevWarningLocked}->${isWarningLocked}`);
+        updateTrackingUI();
+        fadeAndRender();
+      }
+      
+      // If warnings just expired, immediately sync with SPC to stay in sync with bottomthird
+      if (prevWarningState && !hasActiveWarnings) {
+        console.log("Warnings expired - syncing with SPC immediately");
+        await updateCameraRouting();
+      }
+    }
+
+    async function updateCameraRouting() {
+      const headerSub = document.getElementById("headerSub");
+
+      try {
+        const res = await fetch(spcBase, { cache: "no-store" });
+        const data = await res.json();
+        globalSpcFeatures = data.features;
+        
+        let maxOverallDn = -1;
+        data.features.forEach(f => {
+          if (f.properties && f.properties.DN > maxOverallDn) {
+            maxOverallDn = f.properties.DN;
+          }
+        });
+
+        // Only update tracking mode from SPC if NO active warnings
+        if (!hasActiveWarnings) {
+          const spcShouldTrack = maxOverallDn >= 5;
+          
+          if (spcShouldTrack !== isTrackingMode) {
+            console.log(`updateCameraRouting: SPC tracking=${spcShouldTrack}, updating isTrackingMode`);
+            isTrackingMode = spcShouldTrack;
+            cycleIndex = 0;
+            updateTrackingUI();
+            fadeAndRender();
+          }
+        } else {
+          console.log(`updateCameraRouting: Warnings active, SPC update blocked`);
+        }
+
+      } catch (e) {
+        console.error("Failed to fetch SPC for cameras", e);
+        headerSub.textContent = "Routing Failed";
+        fadeAndRender(); 
+      }
+    }
+
+    // --- TIMERS ---
+    (async () => {
+      await loadODOTCameras();
+      await updateCameraRouting(); // Sync with SPC first
+      await fetchWarnings(); // Then check warnings
+      renderCameras(); // Initial render
+    })();
+    
+    setInterval(updateCameraRouting, 600000);  // Check SPC every 10 minutes
+    setInterval(fetchWarnings, 30000); // Check warnings every 30 seconds for real-time response
+    setInterval(refreshImages, 12000);        
+
+    // THE CAROUSEL TIMER
+    setInterval(() => {
+      if (!isWarningLocked) {
+        // Cycle unless warning-locked (allows cycling in both tracking and normal modes)
+        cycleIndex += 4; 
+        fadeAndRender();
+      }
+    }, 30000); 
+
+  </script>
+</body>
+</html>
