@@ -81,7 +81,9 @@
       "Flash Flood Warning": { bg: "#8B0000", text: "white" }, 
       "Severe Thunderstorm Warning": { bg: "#FFA500", text: "white" }, 
       "Tornado Watch": { bg: "#FFFF00", text: "black" }, 
-      "Severe Thunderstorm Watch": { bg: "#DB7093", text: "black" } 
+      "Severe Thunderstorm Watch": { bg: "#DB7093", text: "black" },
+      "Tornado Emergency": { bg: "#8B0000", text: "white" }, 
+      "Flash Flood Emergency": { bg: "#4B0000", text: "white" } 
     };
 
     const hazardTranslations = {
@@ -96,9 +98,21 @@
 
     async function fetchAlerts() {
       try {
-        const res = await fetch("https://api.weather.gov/alerts/active");
+        const res = await fetch("https://api.weather.gov/alerts/active?area=AR,KS,MO,OK");
         const data = await res.json();
-        activeAlerts = data.features.map(f => f.properties).filter(a => alertConfig[a.event]);
+        const baseAlerts = data.features.map(f => f.properties).filter(a => alertConfig[a.event]);
+        
+        // Expand alerts with multiple counties into separate entries in the cycle
+        activeAlerts = [];
+        baseAlerts.forEach(alert => {
+          const counties = alert.areaDesc.split(';').map(s => s.trim()).filter(c => c);
+          counties.forEach(county => {
+            const alertCopy = { ...alert };
+            alertCopy.displayCounty = county;
+            activeAlerts.push(alertCopy);
+          });
+        });
+        
         if (activeAlerts.length > 0 && cycleIndex === 0) showNextAlert();
       } catch (e) { console.error(e); }
     }
@@ -111,22 +125,83 @@
       setTimeout(() => {
         if (activeAlerts.length === 0) return;
         const alert = activeAlerts[cycleIndex % activeAlerts.length];
-        const config = alertConfig[alert.event];
         
-        badge.textContent = alert.event;
+        const desc = alert.description?.toLowerCase() || "";
+        const params = alert.parameters || {};
+        
+        let eventName = alert.event;
+        
+        // Detect emergency conditions using parameters and description
+        if (alert.event === "Tornado Warning") {
+          if (desc.includes("catastrophic") || desc.includes("destructive") || 
+              desc.includes("extremely dangerous and")) {
+            eventName = "Tornado Emergency";
+          }
+        } else if (alert.event === "Flash Flood Warning") {
+          // Check parameters for CATASTROPHIC damage threat (most reliable indicator)
+          if (params.flashFloodDamageThreat?.[0] === "CATASTROPHIC" ||
+              desc.includes("catastrophic") || desc.includes("extremely dangerous and")) {
+            eventName = "Flash Flood Emergency";
+          }
+        }
+        
+        const config = alertConfig[eventName];
+        
+        badge.textContent = eventName;
         badge.style.backgroundColor = config.bg;
         badge.style.color = config.text;
 
-        let sender = alert.senderName.replace("NWS ", "");
-        const stateAbbr = sender.split(" ").pop();
-        const stateFull = stateMap[stateAbbr] || stateAbbr;
-        const area = alert.areaDesc.split(';')[0].split(',')[0].trim();
+        // Extract state and county from the displayCounty (format: "County, STATE" or just "County")
+        let stateAbbr = '';
+        const countyParts = alert.displayCounty.split(',').map(s => s.trim());
+        const area = countyParts[0];
+        
+        if (countyParts.length > 1) {
+          // State is after comma
+          const potentialState = countyParts[countyParts.length - 1].toUpperCase();
+          if (potentialState.length === 2 && /^[A-Z]{2}$/.test(potentialState)) {
+            stateAbbr = potentialState;
+          }
+        }
+        
+        // Fallback to sender name if state not found
+        if (!stateAbbr) {
+          let sender = alert.senderName.replace("NWS ", "");
+          stateAbbr = sender.split(" ").pop();
+        }
+        
         document.getElementById("location").textContent = `${area}, ${stateAbbr}`;
 
-        const desc = alert.description?.toLowerCase() || "";
-        const hazardText = Object.keys(hazardTranslations).filter(h => desc.includes(h)).map(h => hazardTranslations[h]).join(" | ");
+        // Build hazard text from API parameters (more reliable than parsing description)
+        let hazardText = '';
+        
+        if (params.tornadoDetection?.[0]) {
+          hazardText = `Tornado: ${params.tornadoDetection[0]}`;
+        }
+        if (params.maxWindGust?.[0]) {
+          hazardText += (hazardText ? " | " : "") + params.maxWindGust[0];
+        } else if (params.windThreat?.[0]) {
+          hazardText += (hazardText ? " | " : "") + `Winds: ${params.windThreat[0]}`;
+        }
+        if (params.maxHailSize?.[0]) {
+          hazardText += (hazardText ? " | " : "") + `Hail: ${params.maxHailSize[0]}`;
+        } else if (params.hailThreat?.[0]) {
+          hazardText += (hazardText ? " | " : "") + `Hail: ${params.hailThreat[0]}`;
+        }
+        if (params.flashFloodDetection?.[0]) {
+          hazardText += (hazardText ? " | " : "") + `Flash Flood: ${params.flashFloodDetection[0]}`;
+        }
+        
+        // Fallback to description parsing if parameters aren't populated
+        if (!hazardText) {
+          const hazardMatches = Object.keys(hazardTranslations)
+            .filter(h => desc.includes(h))
+            .map(h => hazardTranslations[h]);
+          hazardText = hazardMatches.join(" | ");
+        }
+        
         const expireTime = new Date(alert.expires).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        document.getElementById("details").innerHTML = `<b>EXPIRES: ${expireTime}</b> | ${hazardText || alert.event.toUpperCase()}`;
+        document.getElementById("details").innerHTML = `<b>EXPIRES: ${expireTime}</b> | ${hazardText || eventName.toUpperCase()}`;
 
         document.getElementById("banner").classList.add("visible");
         textGroup.classList.remove("text-hidden");
