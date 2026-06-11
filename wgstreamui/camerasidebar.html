@@ -6,7 +6,7 @@
   <title>Weather Goobers - Smart Auto-Routing Cameras</title>
   
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
+ 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,400;0,700;0,900;1,900&family=Roboto:wght@400;700;900&display=swap');
     
@@ -14,14 +14,14 @@
       margin: 0; background: transparent; font-family: 'Roboto Condensed', sans-serif;
       overflow: hidden; color: white;
     }
-
+ 
     .panel-wrapper {
       width: 309px; height: 913px; display: flex; flex-direction: column;
       background: linear-gradient(180deg, rgba(15,15,15,0.95) 0%, rgba(5,5,5,0.95) 100%);
       border-left: 2px solid rgba(255, 255, 255, 0.1);
       box-shadow: -5px 0 15px rgba(0,0,0,0.8);
     }
-
+ 
     .header {
       padding: 12px 0; text-align: center; border-bottom: 2px solid rgba(255,255,255,0.2);
       transition: background 0.8s ease;
@@ -29,44 +29,44 @@
     
     .bg-cloud-watching { background: linear-gradient(135deg, #4A3B82 0%, #2A1B52 100%); }
     .bg-active { background: linear-gradient(135deg, #990000 0%, #550000 100%); }
-
+ 
     .header-title { font-weight: 900; font-size: 24px; letter-spacing: 2px; text-transform: uppercase; }
     .header-sub { font-weight: 700; font-size: 12px; color: #cbd5e1; letter-spacing: 1px; text-transform: uppercase; transition: color 0.3s; }
-
+ 
     /* --- FADING CONTAINER LOGIC --- */
     .cam-container {
       flex-grow: 1; display: flex; flex-direction: column; padding: 10px; gap: 12px; justify-content: flex-start;
       opacity: 1;
       transition: opacity 0.6s ease-in-out;
     }
-
+ 
     .fade-out {
       opacity: 0 !important;
     }
-
+ 
     .cam-box {
       width: 100%; background: #000; border: 1px solid #333; border-radius: 4px; overflow: hidden;
       position: relative; box-shadow: 0 4px 8px rgba(0,0,0,0.5);
     }
-
+ 
     .video-wrapper { position: relative; width: 100%; padding-top: 56.25%; }
     
     video, img.refreshable-img {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
     }
-
+ 
     .cam-label {
       position: absolute; bottom: 0; left: 0; right: 0;
       background: rgba(0,0,0,0.8); padding: 4px 8px; font-size: 13px; font-weight: 700;
       text-transform: uppercase; border-top: 1px solid rgba(255,255,255,0.2);
       display: flex; justify-content: space-between; align-items: center;
     }
-
+ 
     .risk-badge { font-size: 11px; padding: 2px 6px; border-radius: 3px; font-weight: 900; color: black; text-shadow: none; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
     .status-dot { color: #FF4444; font-size: 10px; animation: pulse 2s infinite; }
     
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-
+ 
     .discord-banner {
       background: #5865F2; padding: 15px 10px; display: flex; flex-direction: column;
       align-items: center; justify-content: center; border-top: 2px solid rgba(255,255,255,0.2);
@@ -76,25 +76,25 @@
   </style>
 </head>
 <body>
-
+ 
   <div class="panel-wrapper">
     <div class="header bg-cloud-watching" id="camHeader">
       <div class="header-title">LIVE CAMS</div>
       <div class="header-sub" id="headerSub">Cycling All Cameras</div>
     </div>
-
+ 
     <div class="cam-container" id="camContainer"></div>
-
+ 
     <div class="discord-banner">
       <div class="discord-title">JOIN WEATHER GOOBERS</div>
       <div class="discord-link">discord.gg/ZmR9jqwFuj</div>
     </div>
   </div>
-
+ 
   <script>
     const proxyBase = "https://peoc-proxy.onrender.com/stream?url=";
     const ardotProxy = "https://peoc-proxy.onrender.com/ardot/";
-
+ 
     // ==========================================
     // THE CAMERA DATABASE
     // ==========================================
@@ -123,7 +123,7 @@
       { id: "cam_wic", name: "Wichita (KSDOT)",        type: "image", lon: -97.317199, lat: 37.678839, zone: "KSC171", url: "https://kscam.carsprogram.org/snapshots/GEN_5-054-2168-2-US-54atI-135W.jpeg" },
       { id: "cam_wme", name: "West Memphis (ARDOT)",   type: "video", lon: -90.089361, lat: 35.153528, zone: "ARC037", url: `${ardotProxy}386` },
     ];
-
+ 
     // ==========================================
     // ODOT CAMERA LOADER
     // ==========================================
@@ -136,7 +136,7 @@
           }))
         );
         const poles = await res.json();
-
+ 
         poles.forEach(pole => {
           (pole.mapCameras || []).forEach(cam => {
             const entry = cameraDB.find(c => c.id === `ok_${cam.id}`);
@@ -144,7 +144,7 @@
             entry.url = `${proxyBase}${encodeURIComponent(cam.streamDictionary.streamSrc)}`;
           });
         });
-
+ 
         // Remove any declared ODOT cameras that didn't get a URL resolved
         // (protects against bad IDs or out-of-service cameras)
         const unresolved = cameraDB.filter(c => c.id.startsWith("ok_") && !c.url);
@@ -156,7 +156,7 @@
         console.error("Failed to load ODOT cameras", e);
       }
     }
-
+ 
     const spcBase = "https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson";
     const nwsUrl = "https://api.weather.gov/alerts/active?area=AR,KS,MO,OK";
     let globalSpcFeatures = [];
@@ -169,7 +169,7 @@
     let cycleIndex = 0;
     let hasTornado = false;
     let hasDestructiveSvr = false;
-
+ 
     function pointInPolygon(point, vs) {
       let x = point[0], y = point[1];
       let inside = false;
@@ -181,7 +181,7 @@
       }
       return inside;
     }
-
+ 
     function calculateDistance(lat1, lon1, lat2, lon2) {
       const R = 3959; // Earth's radius in miles
       const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -192,15 +192,45 @@
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c;
     }
-
+ 
+    // SPC Color Mappings
+    const spcOutlookColors = {
+      "TSTM": { bg: "#C1E9C1", text: "#000000" },
+      "MRGL": { bg: "#66A366", text: "#000000" },
+      "SLGT": { bg: "#FFE066", text: "#000000" },
+      "ENH": { bg: "#FFA366", text: "#000000" },
+      "MDT": { bg: "#E06666", text: "#FFFFFF" },
+      "HIGH": { bg: "#EE99EE", text: "#000000" }
+    };
+ 
+    const tornadoProbColors = {
+      "2%": { bg: "#79BA7A", text: "#000000" },
+      "5%": { bg: "#BD998A", text: "#000000" },
+      "10%": { bg: "#FFEA9F", text: "#000000" },
+      "15%": { bg: "#FF8080", text: "#000000" },
+      "30%": { bg: "#FF80FF", text: "#000000" },
+      "45%": { bg: "#C896F7", text: "#000000" },
+      "60%": { bg: "#104E8B", text: "#FFFFFF" }
+    };
+ 
+    const hailWindColors = {
+      "5%": { bg: "#79BA7A", text: "#000000" },
+      "15%": { bg: "#BD998A", text: "#000000" },
+      "30%": { bg: "#FF8080", text: "#000000" },
+      "45%": { bg: "#FF80FF", text: "#000000" },
+      "60%": { bg: "#C896F7", text: "#000000" },
+      "75%": { bg: "#5C85D6", text: "#FFFFFF" },
+      "90%": { bg: "#1AFFFF", text: "#000000" }
+    };
+ 
     function calculateRiskForCamera(cam) {
       cam.riskDn = 0; 
       cam.riskLabel = "NO THREAT";
       cam.riskColor = "#333";
       cam.fontColor = "white";
-
+ 
       if (!globalSpcFeatures.length) return cam;
-
+ 
       for (const f of globalSpcFeatures) {
         let props = f.properties;
         if (!props || props.DN <= cam.riskDn) continue; 
@@ -208,7 +238,7 @@
         let isInside = false;
         let type = f.geometry.type;
         let coords = f.geometry.coordinates;
-
+ 
         if (type === 'Polygon') {
           if (pointInPolygon([cam.lon, cam.lat], coords[0])) isInside = true; 
         } else if (type === 'MultiPolygon') {
@@ -216,33 +246,67 @@
             if (pointInPolygon([cam.lon, cam.lat], poly[0])) { isInside = true; break; }
           }
         }
-
+ 
         if (isInside) {
           cam.riskDn = props.DN;
           cam.riskLabel = props.LABEL2 || props.LABEL;
-          cam.riskColor = props.fill || "#555";
-          cam.fontColor = (cam.riskDn >= 5) ? "#FFFFFF" : "#000000"; 
         }
       }
-
+ 
       const upperLabel = cam.riskLabel.toUpperCase();
-      if(upperLabel.includes("MARGINAL")) cam.riskLabel = "MRGL";
-      if(upperLabel.includes("SLIGHT")) cam.riskLabel = "SLGT";
-      if(upperLabel.includes("ENHANCED")) cam.riskLabel = "ENH";
-      if(upperLabel.includes("MODERATE")) cam.riskLabel = "MDT";
-      if(upperLabel.includes("HIGH")) cam.riskLabel = "HIGH";
-      if(upperLabel.includes("THUNDERSTORM")) cam.riskLabel = "TSTM";
-
+      let abbrevLabel = cam.riskLabel;
+      if(upperLabel.includes("MARGINAL")) abbrevLabel = "MRGL";
+      else if(upperLabel.includes("SLIGHT")) abbrevLabel = "SLGT";
+      else if(upperLabel.includes("ENHANCED")) abbrevLabel = "ENH";
+      else if(upperLabel.includes("MODERATE")) abbrevLabel = "MDT";
+      else if(upperLabel.includes("HIGH") && !upperLabel.includes("THUNDERSTORM")) abbrevLabel = "HIGH";
+      else if(upperLabel.includes("THUNDERSTORM")) abbrevLabel = "TSTM";
+ 
+      cam.riskLabel = abbrevLabel;
+ 
+      // Apply explicit color mapping based on label
+      if (spcOutlookColors[cam.riskLabel]) {
+        const colorMap = spcOutlookColors[cam.riskLabel];
+        cam.riskColor = colorMap.bg;
+        cam.fontColor = colorMap.text;
+      } else {
+        // Check for probability-based features (Tornado)
+        let matched = false;
+        for (const prob in tornadoProbColors) {
+          if (upperLabel.includes("TORNADO") && upperLabel.includes(prob)) {
+            const colorMap = tornadoProbColors[prob];
+            cam.riskColor = colorMap.bg;
+            cam.fontColor = colorMap.text;
+            cam.riskLabel = "TOR " + prob;
+            matched = true;
+            break;
+          }
+        }
+        // Check for probability-based features (Hail/Wind)
+        if (!matched) {
+          for (const prob in hailWindColors) {
+            if ((upperLabel.includes("HAIL") || upperLabel.includes("WIND")) && upperLabel.includes(prob)) {
+              const colorMap = hailWindColors[prob];
+              cam.riskColor = colorMap.bg;
+              cam.fontColor = colorMap.text;
+              if (upperLabel.includes("HAIL")) cam.riskLabel = "HAIL " + prob;
+              else cam.riskLabel = "WIND " + prob;
+              break;
+            }
+          }
+        }
+      }
+ 
       return cam;
     }
-
+ 
     // --- NEW: FADE CONTROLLER ---
     function fadeAndRender() {
       const container = document.getElementById("camContainer");
       
       // 1. Trigger CSS Fade Out
       container.classList.add("fade-out");
-
+ 
       // 2. Wait for the fade to finish (600ms), then swap DOM
       setTimeout(() => {
         renderCameras();
@@ -250,17 +314,17 @@
         container.classList.remove("fade-out");
       }, 600);
     }
-
+ 
     function renderCameras() {
       const container = document.getElementById("camContainer");
       
       activeHlsInstances.forEach(hls => hls.destroy());
       activeHlsInstances = [];
       container.innerHTML = ""; 
-
+ 
       const sortedCams = cameraDB.map(calculateRiskForCamera).sort((a, b) => b.riskDn - a.riskDn);
       let selectedCams = [];
-
+ 
       if (isWarningLocked && warningCamerasMap.size > 0) {
         // Warning locked mode: show warning cameras first, sorted by distance
         const warningCams = Array.from(warningCamerasMap.values()).map(w => w.camera);
@@ -325,7 +389,7 @@
           selectedCams.push(sortedCams[(cycleIndex + i) % sortedCams.length]);
         }
       }
-
+ 
       selectedCams.forEach((cam, index) => {
         const camId = `video_${index}`;
         const isImg = cam.type === 'image';
@@ -333,7 +397,7 @@
         const mediaHtml = isImg 
           ? `<img src="${cam.url}?t=${new Date().getTime()}" data-basesrc="${cam.url}" class="refreshable-img" />`
           : `<video id="${camId}" muted autoplay playsinline></video>`;
-
+ 
         const html = `
           <div class="cam-box">
             <div class="video-wrapper">${mediaHtml}</div>
@@ -348,17 +412,17 @@
         `;
         
         container.insertAdjacentHTML('beforeend', html);
-
+ 
         if (!isImg) {
           initHLS(camId, cam.url);
         }
       });
     }
-
+ 
     function initHLS(videoId, streamUrl) {
       const video = document.getElementById(videoId);
       if (!video) return;
-
+ 
       if (Hls.isSupported()) {
         const hls = new Hls({ manifestLoadingMaxRetry: 5, manifestLoadingRetryDelay: 2000 });
         hls.loadSource(streamUrl);
@@ -370,7 +434,7 @@
         video.addEventListener('loadedmetadata', () => video.play());
       }
     }
-
+ 
     function refreshImages() {
       const images = document.querySelectorAll('.refreshable-img');
       images.forEach(img => {
@@ -379,7 +443,7 @@
         img.src = `${baseSrc}${separator}t=${new Date().getTime()}`;
       });
     }
-
+ 
     // --- EXTRACT DAMAGE THREAT TAGS FROM ALERTS ---
     function getAlertDamageThreat(alertProps) {
       if (alertProps.damageThreat && Array.isArray(alertProps.damageThreat) && alertProps.damageThreat.length > 0) {
@@ -387,7 +451,7 @@
       }
       return "";
     }
-
+ 
     // --- CHECK WARNINGS FOR CAMERAS WITHIN WARNING POLYGONS ---
     // Returns true if any relevant warnings were found
     async function checkCameraWarnings() {
@@ -405,14 +469,14 @@
           console.log("No warnings detected");
           return false;
         }
-
+ 
         // Filter to Tornado Warnings and Destructive SVRs (same as bottom third)
         const relevantWarnings = data.features.filter(f => {
           const event = f.properties.event;
           const threat = getAlertDamageThreat(f.properties);
           return event === "Tornado Warning" || (event === "Severe Thunderstorm Warning" && threat === "DESTRUCTIVE");
         });
-
+ 
         if (relevantWarnings.length > 0) {
           hasActiveWarnings = true;
           console.log(`Found ${relevantWarnings.length} relevant warnings (TOR or DESTRUCTIVE SVR)`);
@@ -463,13 +527,13 @@
         return false;
       }
     }
-
+ 
     function updateTrackingUI() {
       const headerSub = document.getElementById("headerSub");
       const camHeader = document.getElementById("camHeader");
-
+ 
       console.log(`updateTrackingUI: isWarningLocked=${isWarningLocked}, warningCameras=${warningCamerasMap.size}, isTrackingMode=${isTrackingMode}`);
-
+ 
       if (isWarningLocked && warningCamerasMap.size > 0) {
         camHeader.classList.replace("bg-cloud-watching", "bg-active");
         const count = warningCamerasMap.size;
@@ -482,7 +546,7 @@
         headerSub.textContent = "Cycling All Cameras";
       }
     }
-
+ 
     // --- FETCH WARNINGS FOR ALERT-DRIVEN MODE ---
     async function fetchWarnings() {
       const prevWarningState = hasActiveWarnings;
@@ -517,10 +581,10 @@
         await updateCameraRouting();
       }
     }
-
+ 
     async function updateCameraRouting() {
       const headerSub = document.getElementById("headerSub");
-
+ 
       try {
         const res = await fetch(spcBase, { cache: "no-store" });
         const data = await res.json();
@@ -532,7 +596,7 @@
             maxOverallDn = f.properties.DN;
           }
         });
-
+ 
         // Only update tracking mode from SPC if NO active warnings
         if (!hasActiveWarnings) {
           const spcShouldTrack = maxOverallDn >= 5;
@@ -547,14 +611,14 @@
         } else {
           console.log(`updateCameraRouting: Warnings active, SPC update blocked`);
         }
-
+ 
       } catch (e) {
         console.error("Failed to fetch SPC for cameras", e);
         headerSub.textContent = "Routing Failed";
         fadeAndRender(); 
       }
     }
-
+ 
     // --- TIMERS ---
     (async () => {
       await loadODOTCameras();
@@ -566,7 +630,7 @@
     setInterval(updateCameraRouting, 600000);  // Check SPC every 10 minutes
     setInterval(fetchWarnings, 30000); // Check warnings every 30 seconds for real-time response
     setInterval(refreshImages, 12000);        
-
+ 
     // THE CAROUSEL TIMER
     setInterval(() => {
       if (!isWarningLocked) {
@@ -575,7 +639,7 @@
         fadeAndRender();
       }
     }, 30000); 
-
+ 
   </script>
 </body>
 </html>
