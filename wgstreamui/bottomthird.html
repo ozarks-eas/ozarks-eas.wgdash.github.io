@@ -247,6 +247,52 @@
   <script>
     const spcBase = "https://www.spc.noaa.gov/products/outlook/";
     const nwsUrl = "https://api.weather.gov/alerts/active?area=AR,KS,MO,OK";
+
+    // =========================================
+    // CUSTOM SPC COLOR PALETTE
+    // =========================================
+    const spcCatColors = {
+      "TSTM": { bg: "#C1E9C1", text: "#000000" },
+      "MRGL": { bg: "#66A366", text: "#000000" },
+      "SLGT": { bg: "#FFE066", text: "#000000" },
+      "ENH":  { bg: "#FFA366", text: "#000000" },
+      "MDT":  { bg: "#E06666", text: "#FFFFFF" },
+      "HIGH": { bg: "#EE99EE", text: "#000000" }
+    };
+
+    // Tornado probability: 2–60%
+    const spcTorProb = [
+      { min: 0.60, bg: "#104E8B", text: "#FFFFFF" },
+      { min: 0.45, bg: "#C896F7", text: "#000000" },
+      { min: 0.30, bg: "#FF80FF", text: "#000000" },
+      { min: 0.15, bg: "#FF8080", text: "#000000" },
+      { min: 0.10, bg: "#FFEA9F", text: "#000000" },
+      { min: 0.05, bg: "#BD998A", text: "#000000" },
+      { min: 0.02, bg: "#79BA7A", text: "#000000" },
+    ];
+
+    // Hail/Wind probability: 5–90% (hail caps at 60%)
+    const spcHailWindProb = [
+      { min: 0.90, bg: "#1AFFFF", text: "#000000" },
+      { min: 0.75, bg: "#5C85D6", text: "#FFFFFF" },
+      { min: 0.60, bg: "#C896F7", text: "#000000" },
+      { min: 0.45, bg: "#FF80FF", text: "#000000" },
+      { min: 0.30, bg: "#FF8080", text: "#000000" },
+      { min: 0.15, bg: "#FFEA9F", text: "#000000" },
+      { min: 0.05, bg: "#BD998A", text: "#000000" },
+    ];
+
+    function getSpcCatStyle(label) {
+      return spcCatColors[(label || "").toUpperCase()] || { bg: "#555555", text: "#FFFFFF" };
+    }
+
+    function getProbStyle(type, prob) {
+      const table = (type === "TOR") ? spcTorProb : spcHailWindProb;
+      for (const entry of table) {
+        if (prob >= entry.min) return entry;
+      }
+      return { bg: "#555555", text: "#FFFFFF" };
+    }
     
     // Stations with accurate Longitude/Latitude for point-in-polygon mapping
     const stations = [
@@ -330,9 +376,10 @@
         const valEl = document.getElementById(valId);
         const cigEl = document.getElementById(cigId);
 
+        const ps = getProbStyle(type, maxProb);
         valEl.textContent = maxProb > 0 ? `${Math.round(maxProb * 100)}%` : "<5%";
-        valEl.style.backgroundColor = probColor;
-        valEl.style.color = (maxProb >= 0.15 && maxProb < 0.30) ? "black" : "white";
+        valEl.style.backgroundColor = maxProb > 0 ? ps.bg : "#555555";
+        valEl.style.color = maxProb > 0 ? ps.text : "#FFFFFF";
 
         if (maxCig > 0) {
           const labels = { 1: "SIG", 2: "EXTR", 3: "HIGH" };
@@ -368,11 +415,11 @@
 
         if (bestFeature && maxDn > 0) {
           const riskName = bestFeature.LABEL2 || bestFeature.LABEL;
-          const fillColor = bestFeature.fill || "#A0A0A0";
+          const catStyle = getSpcCatStyle(bestFeature.LABEL);
           
           spcBadge.textContent = riskName;
-          spcBadge.style.backgroundColor = fillColor;
-          spcBadge.style.color = (maxDn >= 5) ? "#FFFFFF" : "#000000";
+          spcBadge.style.backgroundColor = catStyle.bg;
+          spcBadge.style.color = catStyle.text;
 
           // Stream mode toggle - only update if no warnings are forcing storm tracking mode
           if (!hasActiveWarnings) {
@@ -458,12 +505,13 @@
         if (isInside && props.DN > highestDn) {
           highestDn = props.DN;
           riskLabel = props.LABEL2 || props.LABEL;
-          riskColor = props.fill || "#555";
-          fontColor = (highestDn >= 5) ? "#FFFFFF" : "#000000";
+          const catStyle = getSpcCatStyle(props.LABEL);
+          riskColor = catStyle.bg;
+          fontColor = catStyle.text;
         }
       }
 
-      // Simplify label for ticker space
+      // Normalize to standard SPC abbreviations (consistent with camera files)
       const upperLabel = riskLabel.toUpperCase();
       if(upperLabel.includes("MARGINAL")) riskLabel = "MARGINAL";
       if(upperLabel.includes("SLIGHT")) riskLabel = "SLIGHT";
