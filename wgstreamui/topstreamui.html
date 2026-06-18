@@ -98,7 +98,7 @@
 
     async function fetchAlerts() {
       try {
-        const res = await fetch("https://api.weather.gov/alerts/active?area=AR,KS,MO,OK");
+        const res = await fetch("https://api.weather.gov/alerts/active?area=AR,KS,MO,OK,FL");
         const data = await res.json();
         const baseAlerts = data.features.map(f => f.properties).filter(a => alertConfig[a.event]);
         
