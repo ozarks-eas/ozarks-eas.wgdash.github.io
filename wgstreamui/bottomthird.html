@@ -256,7 +256,7 @@
       "MRGL": { bg: "#66A366", text: "#000000" },
       "SLGT": { bg: "#FFE066", text: "#000000" },
       "ENH":  { bg: "#FFA366", text: "#000000" },
-      "MDT":  { bg: "#E06666", text: "#FFFFFF" },
+      "MDT":  { bg: "#E06666", text: "#000000" },
       "HIGH": { bg: "#EE99EE", text: "#000000" }
     };
 
@@ -392,7 +392,7 @@
         valEl.style.color = maxProb > 0 ? ps.text : "#FFFFFF";
 
         if (maxCig > 0) {
-          const labels = { 1: "SIG", 2: "EXTR", 3: "HIGH" };
+          const labels = { 1: "BASE", 2: "INTN", 3: "VIOL" };
           cigEl.textContent = labels[maxCig] || `CIG${maxCig}`;
           cigEl.style.color = cigColor;
           cigEl.style.display = "block";
