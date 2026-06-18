@@ -145,7 +145,7 @@
 
     async function checkAlerts() {
       try {
-        const res = await fetch("https://api.weather.gov/alerts/active?area=AR,KS,MO,OK");
+        const res = await fetch("https://api.weather.gov/alerts/active?area=AR,KS,MO,OK,FL");
         const data = await res.json();
         // Sorting alerts to match top banner priority (optional, but good for consistency)
         const alert = data.features.map(f => f.properties).find(a => colors[a.event]);
