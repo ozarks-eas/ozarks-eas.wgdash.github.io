@@ -146,6 +146,7 @@
       <select id="modelSelect">
         <option value="base">Weather Goobers Severity Storm Score Index (V2 - OPERATIONAL)</option>
         <option value="ssiv21">Weather Goobers Severity Storm Score Index (V2.1 - NEXTGEN)</option>
+        <option value="nextgen_experimental">Weather Goobers Severity Storm Score Index (V2.1.1 - EXPERIMENTAL NEXTGEN)</option>
         <option value="googlegemini">Gemini Probabilistic Convection Index (G-PCI)</option>
         <option value="openaichatgpt">OpenAI Structural Severity Model (OA-SSM)</option>
         <option value="claude">Anthropic Adaptive Storm Severity Index (A-ASSI)</option>
@@ -178,8 +179,9 @@
       const ALWAYS_INCLUDE_NEXRADS = ["INX", "SRX", "SGF", "MLB", "TBW"];
 
       // Map Configuration
-      const DARK_TILE_URL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
       const LIGHT_TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+      const ESRI_ATTRIBUTION = "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, FAO, NOAA, USGS";
+      const activeBasemaps = new WeakMap();
       let mainMap;
       let mainMapMarkers = L.layerGroup();
       let activeMiniMaps = {};
@@ -206,16 +208,38 @@
 
       const applyMapTheme = (mapObj) => {
         const isLight = document.body.classList.contains("light-mode");
-        const url = isLight ? LIGHT_TILE_URL : DARK_TILE_URL;
-        const attr = isLight ? '&copy; OpenStreetMap' : '&copy; OpenStreetMap & CartoDB';
+        const currentBasemap = activeBasemaps.get(mapObj);
+        if (currentBasemap) mapObj.removeLayer(currentBasemap);
 
-        mapObj.eachLayer((layer) => {
-          if (layer instanceof L.TileLayer && !(layer instanceof L.TileLayer.WMS)) {
-            mapObj.removeLayer(layer);
-          }
-        });
+        let basemap;
+        if (isLight) {
+          mapObj.attributionControl.removeAttribution(ESRI_ATTRIBUTION);
+          basemap = L.tileLayer(LIGHT_TILE_URL, {
+            attribution: '&copy; OpenStreetMap',
+          });
+        } else {
+          mapObj.attributionControl.addAttribution(ESRI_ATTRIBUTION);
+          const labelPane = mapObj.getPane("labelPane") || mapObj.createPane("labelPane");
+          labelPane.style.zIndex = 350;
+          basemap = L.layerGroup([
+            L.tileLayer(
+              "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+              {
+                maxZoom: 16,
+              }
+            ),
+            L.tileLayer(
+              "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
+              {
+                maxZoom: 16,
+                pane: "labelPane",
+              }
+            ),
+          ]);
+        }
 
-        L.tileLayer(url, { attribution: attr }).addTo(mapObj);
+        basemap.addTo(mapObj);
+        activeBasemaps.set(mapObj, basemap);
         
         mapObj.eachLayer(layer => {
           if (layer instanceof L.TileLayer.WMS) layer.bringToFront();
@@ -274,6 +298,63 @@
         let base, vil_factor, et_factor, enhanced, tornado_factor, total, longevityBase, longevity;
 
         switch(model) {
+          case 'nextgen_experimental': {
+            const eniFlash = Number(p.eni_flash_rate) || 12;
+            const llAzShear = Number(p.ll_az_shear) || 0.006;
+            const mlAzShear = Number(p.ml_az_shear) || Number(p.pct98MLAzShear) || 0.005;
+            const ebShear = Number(p.eb_shear) || 35;
+            const srh1km = Number(p.srh_0_1km) || 150;
+            const mlCape = Number(p.ml_cape) || 1800;
+            const mesh = Number(p.mesh) || size;
+
+            const legacyHailBase = (posh * 10 + poh + size * 10 + dbz * 0.2) / 5;
+            const hailMetric = Math.max(legacyHailBase, mesh * 25);
+            const flashFactor = eniFlash > 50 ? 1.5 : eniFlash > 15 ? 1.2 : 1;
+            const capeFactor = mlCape > 2000 ? 1.3 : 1;
+            total = hailMetric * flashFactor * capeFactor + llAzShear * 400;
+
+            const legacyTornado = (tvs > 0 ? 30 : 0) + meso * 3.2;
+            const modernTornado =
+              (llAzShear > 0.008 ? llAzShear * 1200 : 0) * (srh1km > 150 ? 1.4 : 1);
+            const tornadoIndex = Math.max(legacyTornado, modernTornado);
+
+            const shearNorm = Math.min(Math.max(ebShear, 0) / 50, 1);
+            const rotationNorm = Math.min(Math.max(mlAzShear, 0) / 0.015, 1);
+            const score = shearNorm * 0.7 + rotationNorm * 0.3;
+
+            const raw15 = Math.max(5, 90 - score * 85);
+            const raw1hr = Math.max(5, score * 90);
+            const raw30 = Math.max(5, 100 - raw15 - raw1hr);
+            const totalLongevity = raw15 + raw30 + raw1hr;
+            let p15 = Math.round((raw15 / totalLongevity * 100) / 5) * 5;
+            let p30 = Math.round((raw30 / totalLongevity * 100) / 5) * 5;
+            let p1hr = Math.round((raw1hr / totalLongevity * 100) / 5) * 5;
+
+            const sum = p15 + p30 + p1hr;
+            if (sum !== 100) {
+              const diff = 100 - sum;
+              if (p1hr >= p15 && p1hr >= p30) p1hr += diff;
+              else if (p30 >= p15) p30 += diff;
+              else p15 += diff;
+            }
+
+            const extremity = Math.abs(score - 0.5) * 2;
+            const agreement = 1 - Math.abs(shearNorm - rotationNorm);
+            const rawConfidence = 45 + (extremity * 0.6 + agreement * 0.4) * 50;
+            const confidencePct = Math.max(40, Math.min(95, Math.round(rawConfidence / 5) * 5));
+            const confidenceTier =
+              confidencePct >= 80 ? "High" : confidencePct <= 50 ? "Low (Transition Zone)" : "Moderate";
+
+            return {
+              total_intensity: Number(total.toFixed(2)),
+              tornado_index: Number(tornadoIndex.toFixed(2)),
+              longevity15: Math.max(0, Math.min(100, p15)),
+              longevity30: Math.max(0, Math.min(100, p30)),
+              longevity60: Math.max(0, Math.min(100, p1hr)),
+              confidenceDisplay: `${confidencePct}% (${confidenceTier})`,
+            };
+          }
+
           case 'googlegemini':
             // Gemini Probabilistic Model: Heavy weighting on VIL and Echo Tops for longevity & severe potential
             base = (posh * 15 + poh * 1.0 + size * 8 + dbz * 0.25) / 5;
@@ -539,7 +620,9 @@
             <strong>Echo Top Height:</strong> ${p.top || 0} kft<br>
             <strong>15 Min Maint.:</strong> ${s.longevity15}% | 
             <strong>30 Min:</strong> ${s.longevity30}% | 
-            <strong>60 Min:</strong> ${s.longevity60}%<br>
+            <strong>60 Min:</strong> ${s.longevity60}%
+            ${s.confidenceDisplay ? `<br><strong>Model Confidence:</strong> <span style="color: #4da6ff;">${s.confidenceDisplay}</span>` : ""}
+            <br>
             <button id="${tid}" style="margin-top:10px; padding:5px 10px; cursor:pointer;">Toggle Storm Map</button>
             <div id="${mid}" class="map-container"></div>
           `;
