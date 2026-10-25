@@ -144,7 +144,8 @@
     <div class="sort-container">
       <label for="modelSelect">Formula Model:</label>
       <select id="modelSelect">
-        <option value="base">Weather Goobers Severity Storm Score Index (V2)</option>
+        <option value="base">Weather Goobers Severity Storm Score Index (V2 - OPERATIONAL)</option>
+        <option value="ssiv21">Weather Goobers Severity Storm Score Index (V2.1 - NEXTGEN)</option>
         <option value="googlegemini">Gemini Probabilistic Convection Index (G-PCI)</option>
         <option value="openaichatgpt">OpenAI Structural Severity Model (OA-SSM)</option>
         <option value="claude">Anthropic Adaptive Storm Severity Index (A-ASSI)</option>
@@ -396,6 +397,23 @@
             total = Math.min(100, enhanced * 0.78 + tornado_factor);
             p_severe = 100 / (1 + Math.exp(-0.09 * (total - 55)));
             longevityBase = et_factor * 0.60 + vil_factor * 0.40;
+            break;
+          case 'ssiv21':
+            // Improved verison of WG-SSSI V2, put in service on October 24th 2026 and is part of the NEXTGEN suite, foundation for V3 that will be released in 2027
+            base = (posh * 10 + poh * 1 + size * 10.3 + dbz * 0.23) / 5;
+            vil_factor = vil < 13.75 ? 0.43 : 
+                        vil <= 26.4 ? 0.67 : 
+                        vil <= 51 ? 1.38 : 1.88;
+            et_factor = top >= 53 ? 2.13 :
+                        top >= 44.8 ? 1.67 : 
+                        top >= 35.9 ? 1.17 : 
+                        top >= 26.7 ? 0.67 : 
+                        top >= 17.8 ? 0.3 : 
+                        top >= 9.1 ? 0.17 : 0.09;
+            enhanced = base * (0.55 + vil_factor * 0.45) * (0.65 + et_factor * 0.33);
+            tornado_factor = (tvs ? 30.7 : 0) + meso * 3.2;
+            total = enhanced + tornado_factor;
+            longevityBase = et_factor * 0.65 + vil_factor * 0.35;
             break;
           case 'base':
           default:
